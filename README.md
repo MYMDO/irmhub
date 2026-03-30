@@ -75,6 +75,7 @@ IRMHUB ships with the following curated open-source projects:
 | **InstallOffice Tool** | System | Yes |
 | **Win11Debloat (Raphire)** | System | Yes |
 | **Microsoft PowerToys** | System | Yes |
+| **UniGetUI (WingetUI)** | System | Yes |
 
 ## 🛠️ Modifying the Catalog
 
