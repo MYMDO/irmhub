@@ -244,8 +244,9 @@ function Invoke-ExecutionFlow {
         Write-Host ''
 
         try {
-            # Execute within an isolated scriptblock to prevent polluting the caller's global scope
-            $sb = [scriptblock]::Create($SelectedTool.Cmd)
+            # Execute within an isolated scriptblock, relaxing strict mode and error preferences for compatibility
+            $relaxedCmd = "Set-StrictMode -Off; `$ErrorActionPreference = 'Continue'; " + $SelectedTool.Cmd
+            $sb = [scriptblock]::Create($relaxedCmd)
             & $sb
         } catch {
             Write-Host ''
