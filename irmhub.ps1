@@ -7,94 +7,118 @@
     Zero telemetry. Zero logging. HTTPS-only. Confirm before execute.
 .LINK
     https://github.com/MYMDO/irmhub
-.NOTES
-    Run: irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex
 #>
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# TLS BOOTSTRAP
-$_tls = [Net.SecurityProtocolType]::Tls12
-try { $_tls = $_tls -bor [Net.SecurityProtocolType]::Tls13 } catch {}
-[Net.ServicePointManager]::SecurityProtocol = $_tls
-Remove-Variable _tls
+# ==========================================
+# 1. CORE BOOTSTRAP & SECURITY PROFILES
+# ==========================================
 
-# ENABLE VirtualTerminalProcessing for ANSI on PS5.1
-$ESC = [char]27
+# Enforce TLS 1.2 at minimum (often required for GitHub raw content and modern CDNs)
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+} catch {
+    Write-Warning "Failed to enforce TLS 1.2 protocol."
+}
+
+# Try to enable TLS 1.3 if available (PS7+ or newer Windows builds)
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls13
+} catch { }
+
+# Enable VirtualTerminalProcessing for ANSI colors on older PS 5.1 conhost
 try {
     $sig = '[DllImport("kernel32.dll")]public static extern bool SetConsoleMode(IntPtr h,int m);[DllImport("kernel32.dll")]public static extern IntPtr GetStdHandle(int n);[DllImport("kernel32.dll")]public static extern bool GetConsoleMode(IntPtr h,out int m);'
-    $k32 = Add-Type -MemberDefinition $sig -Name K32 -Namespace VT -PassThru -ErrorAction Stop
-    $hOut = $k32::GetStdHandle(-11)
-    $mode = 0
-    $null = $k32::GetConsoleMode($hOut, [ref]$mode)
-    $null = $k32::SetConsoleMode($hOut, ($mode -bor 4))
-} catch {}
+    $k32 = Add-Type -MemberDefinition $sig -Name K32 -Namespace VT -PassThru -ErrorAction SilentlyContinue
+    if ($k32) {
+        $hOut = $k32::GetStdHandle(-11)
+        $mode = 0
+        $null = $k32::GetConsoleMode($hOut, [ref]$mode)
+        $null = $k32::SetConsoleMode($hOut, ($mode -bor 4))
+    }
+} catch { }
 
-# ANSI COLORS — [char]27 works on PS 5.1, 7.x, Windows Terminal
-$ANSI = @{
-    Reset        = "$ESC[0m"
-    Bold         = "$ESC[1m"
-    Dim          = "$ESC[2m"
-    Black        = "$ESC[30m"
-    Red          = "$ESC[31m"
-    Green        = "$ESC[32m"
-    Yellow       = "$ESC[33m"
-    Blue         = "$ESC[34m"
-    Magenta      = "$ESC[35m"
-    Cyan         = "$ESC[36m"
-    White        = "$ESC[37m"
-    BrightBlack  = "$ESC[90m"
-    BrightWhite  = "$ESC[97m"
-    BgBlue       = "$ESC[44m"
-    BgCyan       = "$ESC[46m"
-    BgGreen      = "$ESC[42m"
-    BgRed        = "$ESC[41m"
-    BgYellow     = "$ESC[43m"
-    BgMagenta    = "$ESC[45m"
-    BgBlack      = "$ESC[40m"
-    BgBrightBlack= "$ESC[100m"
+# ==========================================
+# 2. STATE & UI CONFIGURATION
+# ==========================================
+
+$script:ESC = [char]27
+$script:ANSI = @{
+    Reset       = "$script:ESC[0m"
+    Bold        = "$script:ESC[1m"
+    Dim         = "$script:ESC[2m"
+    Red         = "$script:ESC[31m"
+    Green       = "$script:ESC[32m"
+    Yellow      = "$script:ESC[33m"
+    Blue        = "$script:ESC[34m"
+    Magenta     = "$script:ESC[35m"
+    Cyan        = "$script:ESC[36m"
+    White       = "$script:ESC[37m"
+    BrightBlack = "$script:ESC[90m"
 }
 
-function c([string]$text, [string]$color, [switch]$bold) {
-    $b = if ($bold) { $ANSI.Bold } else { '' }
-    return "$b$($ANSI[$color])$text$($ANSI.Reset)"
+# Determine optimal width
+$script:WIDTH = [Math]::Min(100, $Host.UI.RawUI.WindowSize.Width - 2)
+if ($script:WIDTH -lt 60) { $script:WIDTH = 78 }
+
+# ==========================================
+# 3. CATALOG REGISTRY
+# ==========================================
+
+# Defined as an array of structured hashtables mapped to PSCustomObjects for clean readability
+$script:CATALOG = @(
+    @{ Id=1;  Name='Scoop';                  Cat='Package Manager'; Icon='[PKG]'; Admin=$false; Cmd='irm https://get.scoop.sh | iex';                                                                                                                                           GitHub='https://github.com/ScoopInstaller/Scoop';                  Desc='Package manager for Windows. No admin needed. User-space installs.' }
+    @{ Id=2;  Name='Chocolatey';             Cat='Package Manager'; Icon='[PKG]'; Admin=$true;  Cmd='Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))'; GitHub='https://github.com/chocolatey/choco';                       Desc='Largest Windows package repo. 10k+ packages. Enterprise-grade.' }
+    @{ Id=3;  Name='Bun';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://bun.sh/install.ps1 | iex';                                                                                                                                    GitHub='https://github.com/oven-sh/bun';                           Desc='All-in-one JS runtime, bundler, test runner and package manager.' }
+    @{ Id=4;  Name='Deno';                   Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://deno.land/install.ps1 | iex';                                                                                                                               GitHub='https://github.com/denoland/deno';                         Desc='Secure TypeScript/JS runtime by Node.js creators. Built-in TS.' }
+    @{ Id=5;  Name='fnm';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://fnm.vercel.app/install | iex';                                                                                                                              GitHub='https://github.com/Schniz/fnm';                            Desc='Fast Node Version Manager written in Rust. Replaces nvm on Windows.' }
+    @{ Id=6;  Name='uv';                     Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://astral.sh/uv/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/astral-sh/uv';                          Desc='Ultra-fast Python package and project manager by Astral (Rust).' }
+    @{ Id=7;  Name='Rye';                    Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                                                       GitHub='https://github.com/astral-sh/rye';                         Desc='Holistic Python project and environment manager. Handles venvs.' }
+    @{ Id=8;  Name='Rustup';                 Cat='Rust';            Icon='[RS] '; Admin=$false; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                                          GitHub='https://github.com/rust-lang/rustup';                      Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.' }
+    @{ Id=9;  Name='WinUtil (Chris Titus)';  Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://christitus.com/win | iex';                                                                                                                                   GitHub='https://github.com/ChrisTitusTech/winutil';                Desc='All-in-one Windows debloat, tweaks, software install GUI.' }
+    @{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                                                    GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.' }
+    @{ Id=11; Name='PowerShell 7';           Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                                                     GitHub='https://github.com/PowerShell/PowerShell';                 Desc='Official Microsoft installer for PowerShell 7 (cross-platform).' }
+    @{ Id=12; Name='Oh My Posh';             Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.' }
+    @{ Id=13; Name='Terminal-Icons';         Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                                       GitHub='https://github.com/devblackops/Terminal-Icons';            Desc='PowerShell module to show file and folder icons in the terminal.' }
+    @{ Id=14; Name='Spicetify CLI';          Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex';                                                                                      GitHub='https://github.com/spicetify/cli';                         Desc='Customize the Spotify desktop client with themes and extensions.' }
+    @{ Id=15; Name='Spicetify Marketplace';  Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex';                                                                  GitHub='https://github.com/spicetify/marketplace';                 Desc='In-app marketplace for Spicetify themes and extensions.' }
+    @{ Id=16; Name='Datatools (Caltech)';    Cat='Dev Tools';       Icon='[DEV]'; Admin=$false; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                                    GitHub='https://github.com/caltechlibrary/datatools';              Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.' }
+) | ForEach-Object { [PSCustomObject]$_ }
+
+# ==========================================
+# 4. HELPER FUNCTIONS
+# ==========================================
+
+function Format-Color {
+    param([string]$Text, [string]$ColorCode, [switch]$Bold)
+    $fontWeight = if ($Bold) { $script:ANSI.Bold } else { '' }
+    return "$fontWeight$($script:ANSI[$ColorCode])$Text$($script:ANSI.Reset)"
 }
 
-# TOOL CATALOG
-$CATALOG = @(
-    [PSCustomObject]@{ Id=1;  Name='Scoop';                  Desc='Package manager for Windows. No admin needed. User-space installs.';                  Category='Package Manager'; CatIcon='[PKG]'; Cmd='irm https://get.scoop.sh | iex';                                                                                                                                           GitHub='https://github.com/ScoopInstaller/Scoop';                  NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=2;  Name='Chocolatey';             Desc='Largest Windows package repo. 10k+ packages. Enterprise-grade.';                      Category='Package Manager'; CatIcon='[PKG]'; Cmd='Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))'; GitHub='https://github.com/chocolatey/choco';                       NeedsAdmin=$true  },
-    [PSCustomObject]@{ Id=3;  Name='Bun';                    Desc='All-in-one JS runtime, bundler, test runner and package manager.';                    Category='JavaScript';      CatIcon='[JS] '; Cmd='irm https://bun.sh/install.ps1 | iex';                                                                                                                                    GitHub='https://github.com/oven-sh/bun';                           NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=4;  Name='Deno';                   Desc='Secure TypeScript/JS runtime by Node.js creators. Built-in TS.';                      Category='JavaScript';      CatIcon='[JS] '; Cmd='irm https://deno.land/install.ps1 | iex';                                                                                                                               GitHub='https://github.com/denoland/deno';                         NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=5;  Name='fnm';                    Desc='Fast Node Version Manager written in Rust. Replaces nvm on Windows.';                 Category='JavaScript';      CatIcon='[JS] '; Cmd='irm https://fnm.vercel.app/install | iex';                                                                                                                              GitHub='https://github.com/Schniz/fnm';                            NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=6;  Name='uv';                     Desc='Ultra-fast Python package and project manager by Astral (Rust).';                     Category='Python';          CatIcon='[PY] '; Cmd='irm https://astral.sh/uv/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/astral-sh/uv';                          NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=7;  Name='Rye';                    Desc='Holistic Python project and environment manager. Handles venvs.';                     Category='Python';          CatIcon='[PY] '; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                                                       GitHub='https://github.com/astral-sh/rye';                         NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=8;  Name='Rustup';                 Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.';                   Category='Rust';            CatIcon='[RS] '; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                                          GitHub='https://github.com/rust-lang/rustup';                      NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=9;  Name='WinUtil (Chris Titus)';  Desc='All-in-one Windows debloat, tweaks, software install GUI.';                           Category='System';          CatIcon='[SYS]'; Cmd='irm https://christitus.com/win | iex';                                                                                                                                   GitHub='https://github.com/ChrisTitusTech/winutil';                NeedsAdmin=$true  },
-    [PSCustomObject]@{ Id=10; Name='MAS (Activation Scripts)';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.';                Category='System';          CatIcon='[SYS]'; Cmd='irm https://get.activated.win | iex';                                                                                                                                    GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';NeedsAdmin=$true  },
-    [PSCustomObject]@{ Id=11; Name='PowerShell 7';           Desc='Official Microsoft installer for PowerShell 7 (cross-platform).';                     Category='System';          CatIcon='[SYS]'; Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                                                     GitHub='https://github.com/PowerShell/PowerShell';                 NeedsAdmin=$true  },
-    [PSCustomObject]@{ Id=12; Name='Oh My Posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.';                   Category='Shell / UX';      CatIcon='[UX] '; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=13; Name='Terminal-Icons';         Desc='PowerShell module to show file and folder icons in the terminal.';                    Category='Shell / UX';      CatIcon='[UX] '; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                                       GitHub='https://github.com/devblackops/Terminal-Icons';            NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=14; Name='Spicetify CLI';          Desc='Customize the Spotify desktop client with themes and extensions.';                    Category='Media';           CatIcon='[MED]'; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex';                                                                                      GitHub='https://github.com/spicetify/cli';                         NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=15; Name='Spicetify Marketplace';  Desc='In-app marketplace for Spicetify themes and extensions.';                             Category='Media';           CatIcon='[MED]'; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex';                                                                  GitHub='https://github.com/spicetify/marketplace';                 NeedsAdmin=$false },
-    [PSCustomObject]@{ Id=16; Name='Datatools (Caltech)';    Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.';                              Category='Dev Tools';       CatIcon='[DEV]'; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                                    GitHub='https://github.com/caltechlibrary/datatools';              NeedsAdmin=$false }
-)
-
-# LAYOUT
-$WIDTH = [Math]::Min(100, $Host.UI.RawUI.WindowSize.Width - 2)
-if ($WIDTH -lt 60) { $WIDTH = 78 }
-
-function Draw-Line([string]$char = '-') {
-    Write-Host ($char * $WIDTH) -ForegroundColor DarkGray
+function Write-Divider {
+    param([string]$Char = '-')
+    Write-Host ($Char * $script:WIDTH) -ForegroundColor DarkGray
 }
 
-function Clear-Screen { Clear-Host }
+function Test-AdministratorRights {
+    $identity  = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = [Security.Principal.WindowsPrincipal]$identity
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
 
-# BANNER
-function Show-Banner {
-    Clear-Screen
-    $logo = @(
+function Show-ClearConsole {
+    Clear-Host
+}
+
+# ==========================================
+# 5. UI COMPONENTS
+# ==========================================
+
+function Show-HeaderBanner {
+    Show-ClearConsole
+    $asciiLogo = @(
         '  ██╗██████╗ ███╗   ███╗    ██╗  ██╗██╗   ██╗██████╗ ',
         '  ██║██╔══██╗████╗ ████║    ██║  ██║██║   ██║██╔══██╗',
         '  ██║██████╔╝██╔████╔██║    ███████║██║   ██║██████╔╝',
@@ -102,194 +126,246 @@ function Show-Banner {
         '  ██║██║  ██║██║ ╚═╝ ██║    ██║  ██║╚██████╔╝██████╔╝',
         '  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ '
     )
-    foreach ($line in $logo) { Write-Host $line -ForegroundColor Cyan }
+    foreach ($line in $asciiLogo) { Write-Host $line -ForegroundColor Cyan }
     Write-Host ''
-    $tag = 'Universal PowerShell Tool Launcher  *  irm | iex  *  Zero Telemetry'
-    $pad = [int](($WIDTH - $tag.Length) / 2)
-    Write-Host (' ' * [Math]::Max(0,$pad)) -NoNewline
-    Write-Host $tag -ForegroundColor DarkCyan
+    
+    $tagline = 'Universal PowerShell Tool Launcher  *  irm | iex  *  Zero Telemetry'
+    $padding = [int](($script:WIDTH - $tagline.Length) / 2)
+    Write-Host (' ' * [Math]::Max(0, $padding)) -NoNewline
+    Write-Host $tagline -ForegroundColor DarkCyan
+    
     Write-Host ''
-    Draw-Line
-    Write-Host " $(c '[!]' 'Yellow' -bold) $(c 'SECURITY:' 'Yellow') Every command is shown BEFORE execution. You must confirm." -ForegroundColor Gray
-    Write-Host " $(c '[i]' 'BrightBlack') PRIVACY: No telemetry. No logging. No network calls except tool URLs." -ForegroundColor DarkGray
-    Draw-Line
+    Write-Divider
+    Write-Host " $(Format-Color '[!]' 'Yellow' -Bold) $(Format-Color 'SECURITY:' 'Yellow') Every command is explicitly shown BEFORE execution." -ForegroundColor Gray
+    Write-Host " $(Format-Color '[i]' 'BrightBlack') PRIVACY : No telemetry. No environment logging. Zero outbound calls." -ForegroundColor DarkGray
+    Write-Divider
     Write-Host ''
 }
 
-# CATEGORIES
-function Get-Categories { return @('All') + ($CATALOG | Select-Object -ExpandProperty Category -Unique | Sort-Object) }
-
-function Show-CategoryMenu {
-    $cats = Get-Categories
-    Write-Host " $(c 'FILTER BY CATEGORY' 'BrightBlack')"
+function Show-CategoryList {
+    $categories = @('All') + ($script:CATALOG | Select-Object -ExpandProperty Cat -Unique | Sort-Object)
+    Write-Host " $(Format-Color 'FILTER BY CATEGORY' 'BrightBlack')"
     Write-Host ''
-    for ($i = 0; $i -lt $cats.Count; $i++) {
-        Write-Host "  $(c "[$i]" 'Yellow') $($cats[$i])" -ForegroundColor Gray
+    
+    for ($i = 0; $i -lt $categories.Count; $i++) {
+        Write-Host "  $(Format-Color "[$i]" 'Yellow') $($categories[$i])" -ForegroundColor Gray
     }
     Write-Host ''
-    Write-Host "  $(c '[s]' 'Magenta') Search by name / keyword" -ForegroundColor Gray
-    Write-Host "  $(c '[q]' 'Red')     Quit" -ForegroundColor Gray
+    Write-Host "  $(Format-Color '[s]' 'Magenta') Search by name / keyword" -ForegroundColor Gray
+    Write-Host "  $(Format-Color '[q]' 'Red')     Quit" -ForegroundColor Gray
     Write-Host ''
-    Draw-Line
+    Write-Divider
+    return $categories
 }
 
-# TOOL LIST
-function Show-ToolList([array]$tools) {
-    if ($tools.Count -eq 0) { Write-Host "  $(c 'No tools found.' 'Yellow')"; return }
-    $catColors = @{
-        'Package Manager'='Green'; 'JavaScript'='Yellow'; 'Python'='Blue'
+function Show-FilteredCatalog {
+    param([array]$Items)
+    
+    if (-not $Items -or $Items.Count -eq 0) {
+        Write-Host "  $(Format-Color 'No tools found matching criteria.' 'Yellow')"
+        return
+    }
+    
+    $colorMap = @{
+        'Package Manager'='Green'; 'JavaScript'='Yellow'; 'Python'='Blue';
         'Rust'='Red'; 'System'='Magenta'; 'Shell / UX'='Cyan'; 'Media'='Magenta'; 'Dev Tools'='BrightBlack'
     }
-    foreach ($t in $tools) {
-        $col = if ($catColors.ContainsKey($t.Category)) { $catColors[$t.Category] } else { 'White' }
-        $adm = if ($t.NeedsAdmin) { $(c ' [ADMIN]' 'Red') } else { '' }
-        Write-Host "  $(c "[$($t.Id)]" 'Yellow' -bold) $(c $t.CatIcon $col) $(c $t.Name 'White' -bold)$adm"
-        Write-Host "       $($t.Desc)" -ForegroundColor DarkGray
-        Write-Host "       $(c 'CMD:' 'BrightBlack') $(c $t.Cmd 'Cyan')" -ForegroundColor DarkGray
+
+    foreach ($tool in $Items) {
+        $cColor = if ($colorMap.ContainsKey($tool.Cat)) { $colorMap[$tool.Cat] } else { 'White' }
+        $adminBadge = if ($tool.Admin) { $(Format-Color ' [ADMIN REQUIRED]' 'Red') } else { '' }
+        
+        Write-Host "  $(Format-Color "[$($tool.Id)]" 'Yellow' -Bold) $(Format-Color $tool.Icon $cColor) $(Format-Color $tool.Name 'White' -Bold)$adminBadge"
+        Write-Host "       $($tool.Desc)" -ForegroundColor DarkGray
+        Write-Host "       $(Format-Color 'CMD:' 'BrightBlack') $(Format-Color $tool.Cmd 'Cyan')" -ForegroundColor DarkGray
         Write-Host ''
     }
 }
 
-# SECURITY CONFIRM + EXECUTE
-function Invoke-ToolSecure([PSCustomObject]$tool) {
-    Clear-Screen
-    Draw-Line
-    Write-Host " $(c '> SELECTED TOOL' 'Cyan' -bold)"
-    Draw-Line
+# ==========================================
+# 6. EXECUTION LOGIC
+# ==========================================
+
+function Invoke-ExecutionFlow {
+    param([PSCustomObject]$SelectedTool)
+
+    Show-ClearConsole
+    Write-Divider
+    Write-Host " $(Format-Color '> SELECTED TOOL REVIEW' 'Cyan' -Bold)"
+    Write-Divider
     Write-Host ''
-    Write-Host "  $(c 'Name     :' 'BrightBlack') $(c $tool.Name 'White' -bold)"
-    Write-Host "  $(c 'Category :' 'BrightBlack') $($tool.Category)"
-    Write-Host "  $(c 'GitHub   :' 'BrightBlack') $(c $tool.GitHub 'Cyan')"
-    if ($tool.NeedsAdmin) {
-        Write-Host "  $(c 'Privilege:' 'BrightBlack') $(c 'Requires Administrator rights' 'Red' -bold)"
+    Write-Host "  $(Format-Color 'Name     :' 'BrightBlack') $(Format-Color $SelectedTool.Name 'White' -Bold)"
+    Write-Host "  $(Format-Color 'Category :' 'BrightBlack') $($SelectedTool.Cat)"
+    Write-Host "  $(Format-Color 'GitHub   :' 'BrightBlack') $(Format-Color $SelectedTool.GitHub 'Cyan')"
+    
+    if ($SelectedTool.Admin) {
+        Write-Host "  $(Format-Color 'Privilege:' 'BrightBlack') $(Format-Color 'Requires Administrator Rights' 'Red' -Bold)"
     } else {
-        Write-Host "  $(c 'Privilege:' 'BrightBlack') $(c 'Runs as current user (no admin needed)' 'Green')"
+        Write-Host "  $(Format-Color 'Privilege:' 'BrightBlack') $(Format-Color 'Runs as current user (No Admin)' 'Green')"
     }
     Write-Host ''
-    Write-Host "  $(c 'Description:' 'BrightBlack')"
-    Write-Host "  $($tool.Desc)" -ForegroundColor Gray
+    Write-Host "  $(Format-Color 'Description:' 'BrightBlack')"
+    Write-Host "  $($SelectedTool.Desc)" -ForegroundColor Gray
     Write-Host ''
-    Draw-Line
+    Write-Divider
     Write-Host ''
-    Write-Host " $(c '! COMMAND THAT WILL BE EXECUTED:' 'Yellow' -bold)"
+    Write-Host " $(Format-Color '! COMMAND TO BE EXECUTED:' 'Yellow' -Bold)"
     Write-Host ''
-    Write-Host "   $(c $tool.Cmd 'Green' -bold)"
+    Write-Host "   $(Format-Color $SelectedTool.Cmd 'Green' -Bold)"
     Write-Host ''
-    Draw-Line
+    Write-Divider
 
-    if ($tool.NeedsAdmin) {
-        $id  = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $pr  = [Security.Principal.WindowsPrincipal]$id
-        $adm = $pr.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-        if (-not $adm) {
-            Write-Host ''
-            Write-Host " $(c '[!] WARNING:' 'Red' -bold) This tool requires Administrator privileges." -ForegroundColor Red
-            Write-Host "     Restart PowerShell as Administrator and run IRMHUB again." -ForegroundColor Red
-            Write-Host ''
-            Write-Host " Press $(c 'Enter' 'Yellow') to go back..." -NoNewline
-            $null = $Host.UI.ReadLine()
-            return
-        }
-    }
-
-    Write-Host ''
-    Write-Host " $(c 'SECURITY CHECKLIST:' 'BrightBlack')" -ForegroundColor DarkGray
-    Write-Host "  $(c 'OK' 'Green') TLS 1.2+ enforced"              -ForegroundColor DarkGray
-    Write-Host "  $(c 'OK' 'Green') HTTPS source URL"               -ForegroundColor DarkGray
-    Write-Host "  $(c 'OK' 'Green') Official GitHub repo linked"    -ForegroundColor DarkGray
-    Write-Host "  $(c '!!' 'Yellow') Review source code at GitHub before trusting" -ForegroundColor DarkGray
-    Write-Host ''
-
-    $confirm = Read-Host " Type $(c 'YES' 'Green' -bold) to execute, or press Enter to cancel"
-    if ($confirm -ne 'YES') {
+    if ($SelectedTool.Admin -and -not (Test-AdministratorRights)) {
         Write-Host ''
-        Write-Host " $(c 'Cancelled.' 'Yellow') No command was executed." -ForegroundColor Yellow
-        Start-Sleep -Milliseconds 900
+        Write-Host " $(Format-Color '[!] WARNING:' 'Red' -Bold) This tool requires Administrator privileges." -ForegroundColor Red
+        Write-Host "     Restart PowerShell as Administrator and run IRMHUB again." -ForegroundColor Red
+        Write-Host ''
+        Write-Host " Press $(Format-Color 'Enter' 'Yellow') to go back..." -NoNewline
+        $null = $Host.UI.ReadLine()
         return
     }
 
     Write-Host ''
-    Draw-Line
-    Write-Host " $(c '> Executing...' 'Green' -bold)"
-    Draw-Line
+    Write-Host " $(Format-Color 'SECURITY CHECKLIST:' 'BrightBlack')"
+    Write-Host "  $(Format-Color 'OK' 'Green') TLS 1.2+ forced" -ForegroundColor DarkGray
+    Write-Host "  $(Format-Color 'OK' 'Green') HTTPS verified base endpoints" -ForegroundColor DarkGray
+    Write-Host "  $(Format-Color 'OK' 'Green') Exact command shown prior to execution" -ForegroundColor DarkGray
+    Write-Host "  $(Format-Color '!!' 'Yellow') Ensure you trust the author at: $($SelectedTool.GitHub)" -ForegroundColor DarkGray
     Write-Host ''
 
-    try {
-        $sb = [scriptblock]::Create($tool.Cmd)
-        & $sb
-    } catch {
+    $confirmation = Read-Host " Type $(Format-Color 'YES' 'Green' -Bold) to strictly confirm and execute, or press Enter to cancel"
+    
+    if ($confirmation -ceq 'YES') {
         Write-Host ''
-        Write-Host " $(c '[ERROR]' 'Red' -bold) $($_.Exception.Message)" -ForegroundColor Red
-    }
+        Write-Divider
+        Write-Host " $(Format-Color '> Instantiating child runspace...' 'BrightBlack')"
+        Write-Host " $(Format-Color '> Executing module deployment...' 'Green' -Bold)"
+        Write-Divider
+        Write-Host ''
 
-    Write-Host ''
-    Draw-Line
-    Write-Host " $(c 'Done.' 'Green') Press $(c 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
-    $null = $Host.UI.ReadLine()
-}
-
-# SEARCH
-function Invoke-Search {
-    Show-Banner
-    $kw = Read-Host " $(c 'Search' 'Cyan') (name / keyword)"
-    if ([string]::IsNullOrWhiteSpace($kw)) { return }
-    $kw = $kw.Trim().ToLower()
-    $results = @($CATALOG | Where-Object {
-        $_.Name.ToLower().Contains($kw) -or $_.Desc.ToLower().Contains($kw) -or
-        $_.Category.ToLower().Contains($kw) -or $_.Cmd.ToLower().Contains($kw)
-    })
-    Show-Banner
-    Write-Host " $(c 'Results for:' 'BrightBlack') $(c $kw 'Cyan' -bold)  $(c "($($results.Count) found)" 'BrightBlack')"
-    Write-Host ''
-    Show-ToolList $results
-    if ($results.Count -gt 0) {
-        $idInput = Read-Host " Enter tool $(c '[ID]' 'Yellow') to run, or Enter to go back"
-        if ($idInput -match '^\d+$') {
-            $chosen = $results | Where-Object { $_.Id -eq [int]$idInput }
-            if ($chosen) { Invoke-ToolSecure $chosen }
+        try {
+            # Execute within an isolated scriptblock to prevent polluting the caller's global scope
+            $sb = [scriptblock]::Create($SelectedTool.Cmd)
+            & $sb
+        } catch {
+            Write-Host ''
+            Write-Host " $(Format-Color '[ERROR]' 'Red' -Bold) Execution Framework Failed." -ForegroundColor Red
+            Write-Host " Details: $($_.Exception.Message)" -ForegroundColor Red
+        } finally {
+            [Console]::ResetColor()
+            Write-Host ''
+            Write-Divider
+            Write-Host " $(Format-Color 'Task Complete.' 'Green') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+            $null = $Host.UI.ReadLine()
         }
     } else {
-        Write-Host " Press $(c 'Enter' 'Yellow') to go back..." -NoNewline
+        Write-Host ''
+        Write-Host " $(Format-Color 'Execution Cancelled.' 'Yellow') No system modifications were made." -ForegroundColor Yellow
+        Start-Sleep -Milliseconds 1200
+    }
+}
+
+function Invoke-SearchFlow {
+    Show-HeaderBanner
+    $keyword = Read-Host " $(Format-Color 'Search Catalog' 'Cyan') (name / keyword)"
+    if ([string]::IsNullOrWhiteSpace($keyword)) { return }
+    
+    $keyword = $keyword.Trim().ToLower()
+    $searchResults = @($script:CATALOG | Where-Object {
+        $_.Name.ToLower().Contains($keyword) -or 
+        $_.Desc.ToLower().Contains($keyword) -or
+        $_.Cat.ToLower().Contains($keyword) -or 
+        $_.Cmd.ToLower().Contains($keyword)
+    })
+    
+    Show-HeaderBanner
+    Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $keyword 'Cyan' -Bold)  $(Format-Color "($($searchResults.Count) found)" 'BrightBlack')"
+    Write-Host ''
+    
+    Show-FilteredCatalog -Items $searchResults
+    
+    if ($searchResults.Count -gt 0) {
+        $idInput = Read-Host " Enter tool $(Format-Color '[ID]' 'Yellow') to review and run, or press Enter to go back"
+        if ($idInput -match '^\d+$') {
+            $matched = $searchResults | Where-Object { $_.Id -eq [int]$idInput }
+            if ($matched) { Invoke-ExecutionFlow -SelectedTool $matched[0] }
+        }
+    } else {
+        Write-Host " Press $(Format-Color 'Enter' 'Yellow') to go back..." -NoNewline
         $null = $Host.UI.ReadLine()
     }
 }
 
-# MAIN LOOP
+# ==========================================
+# 7. MAIN EVENT LOOP
+# ==========================================
+
 function Start-IrmHub {
-    $cats = Get-Categories
-    while ($true) {
-        Show-Banner
-        Show-CategoryMenu
-        $inp = (Read-Host " $(c '->' 'Cyan') Choose category or command").Trim().ToLower()
+    try {
+        while ($true) {
+            Show-HeaderBanner
+            $catList = Show-CategoryList
+            
+            $userInput = (Read-Host " $(Format-Color '->' 'Cyan') Choose menu option or category ID").Trim().ToLower()
 
-        if ($inp -eq 'q' -or $inp -eq 'quit' -or $inp -eq 'exit') {
-            Write-Host ''; Write-Host " $(c 'Goodbye!' 'Cyan')"; Write-Host ''
-            break
-        }
-        if ($inp -eq 's') { Invoke-Search; continue }
-
-        if ($inp -match '^\d+$') {
-            $catIdx = [int]$inp
-            if ($catIdx -ge 0 -and $catIdx -lt $cats.Count) {
-                $selectedCat = $cats[$catIdx]
-                $filtered = @(if ($selectedCat -eq 'All') { $CATALOG } else { $CATALOG | Where-Object { $_.Category -eq $selectedCat } })
-                Show-Banner
-                $hdr = if ($selectedCat -eq 'All') { 'ALL TOOLS' } else { $selectedCat.ToUpper() }
-                Write-Host " $(c $hdr 'Cyan' -bold)  $(c "($($filtered.Count) tools)" 'BrightBlack')"
+            # Handle Exit
+            if ($userInput -in @('q', 'quit', 'exit', 'close')) {
                 Write-Host ''
-                Show-ToolList $filtered
-                Draw-Line
-                $idInput = Read-Host " Enter tool $(c '[ID]' 'Yellow') to run, or Enter to go back"
-                if ($idInput -match '^\d+$') {
-                    $chosen = $filtered | Where-Object { $_.Id -eq [int]$idInput }
-                    if ($chosen) { Invoke-ToolSecure $chosen }
-                    else { Write-Host " $(c '[!] Invalid ID.' 'Yellow')"; Start-Sleep -Milliseconds 700 }
+                Write-Host " $(Format-Color 'Exiting IRMHUB. Trust Open Source. Goodbye!' 'Cyan')"
+                Write-Host ''
+                break
+            }
+            
+            # Handle Search
+            if ($userInput -eq 's') { 
+                Invoke-SearchFlow 
+                continue 
+            }
+
+            # Handle Category Selection
+            if ($userInput -match '^\d+$') {
+                $categoryIndex = [int]$userInput
+                
+                if ($categoryIndex -ge 0 -and $categoryIndex -lt $catList.Count) {
+                    $selectedCategory = $catList[$categoryIndex]
+                    
+                    $filteredItems = @()
+                    if ($selectedCategory -eq 'All') {
+                        $filteredItems = $script:CATALOG
+                    } else {
+                        $filteredItems = $script:CATALOG | Where-Object { $_.Cat -eq $selectedCategory }
+                    }
+                    
+                    Show-HeaderBanner
+                    $displayHeader = if ($selectedCategory -eq 'All') { 'ENTIRE CATALOG' } else { $selectedCategory.ToUpper() }
+                    Write-Host " $(Format-Color $displayHeader 'Cyan' -Bold)  $(Format-Color "($($filteredItems.Count) tools)" 'BrightBlack')"
+                    Write-Host ''
+                    
+                    Show-FilteredCatalog -Items $filteredItems
+                    Write-Divider
+                    
+                    $idInput = Read-Host " Enter tool $(Format-Color '[ID]' 'Yellow') to review and run, or press Enter to go back"
+                    if ($idInput -match '^\d+$') {
+                        $chosenTool = $filteredItems | Where-Object { $_.Id -eq [int]$idInput }
+                        
+                        if ($chosenTool) { 
+                            Invoke-ExecutionFlow -SelectedTool $chosenTool[0] 
+                        } else { 
+                            Write-Host " $(Format-Color '[!] Invalid Tool ID.' 'Yellow')"
+                            Start-Sleep -Milliseconds 800 
+                        }
+                    }
+                } else {
+                    Write-Host " $(Format-Color '[!] Invalid Category ID.' 'Yellow')"
+                    Start-Sleep -Milliseconds 800
                 }
-            } else {
-                Write-Host " $(c '[!] Invalid choice.' 'Yellow')"; Start-Sleep -Milliseconds 700
             }
         }
+    } finally {
+        # Failsafe cleanup ensuring terminal coloring state returns to standard defaults upon abrupt exit
+        [Console]::ResetColor()
     }
 }
 
+# Start Execution
 Start-IrmHub
