@@ -77,6 +77,7 @@ IRMHUB ships with the following curated open-source projects:
 | **Microsoft PowerToys** | System | Yes |
 | **UniGetUI (WingetUI)** | System | Yes |
 | **Windhawk** | System | Yes |
+| **Firefox ESR** | System | Yes |
 
 ## 🛠️ Modifying the Catalog
 
