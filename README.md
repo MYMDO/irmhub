@@ -73,6 +73,7 @@ IRMHUB ships with the following curated open-source projects:
 | **Spicetify Marketplace**| Media | No |
 | **Datatools** | Dev Tools | No |
 | **InstallOffice Tool** | System | Yes |
+| **Win11Debloat (Raphire)** | System | Yes |
 
 ## 🛠️ Modifying the Catalog
 
