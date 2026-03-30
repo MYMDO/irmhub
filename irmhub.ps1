@@ -9,7 +9,7 @@
     https://github.com/MYMDO/irmhub
 #>
 
-Set-StrictMode -Version Latest
+Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 # ==========================================
@@ -67,25 +67,25 @@ if ($script:WIDTH -lt 60) { $script:WIDTH = 78 }
 # 3. CATALOG REGISTRY
 # ==========================================
 
-# Defined as an array of structured hashtables mapped to PSCustomObjects for clean readability
+# Defined as an array of robust PSCustomObjects for clean readability
 $script:CATALOG = @(
-    @{ Id=1;  Name='Scoop';                  Cat='Package Manager'; Icon='[PKG]'; Admin=$false; Cmd='irm https://get.scoop.sh | iex';                                                                                                                                           GitHub='https://github.com/ScoopInstaller/Scoop';                  Desc='Package manager for Windows. No admin needed. User-space installs.' }
-    @{ Id=2;  Name='Chocolatey';             Cat='Package Manager'; Icon='[PKG]'; Admin=$true;  Cmd='Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))'; GitHub='https://github.com/chocolatey/choco';                       Desc='Largest Windows package repo. 10k+ packages. Enterprise-grade.' }
-    @{ Id=3;  Name='Bun';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://bun.sh/install.ps1 | iex';                                                                                                                                    GitHub='https://github.com/oven-sh/bun';                           Desc='All-in-one JS runtime, bundler, test runner and package manager.' }
-    @{ Id=4;  Name='Deno';                   Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://deno.land/install.ps1 | iex';                                                                                                                               GitHub='https://github.com/denoland/deno';                         Desc='Secure TypeScript/JS runtime by Node.js creators. Built-in TS.' }
-    @{ Id=5;  Name='fnm';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://fnm.vercel.app/install | iex';                                                                                                                              GitHub='https://github.com/Schniz/fnm';                            Desc='Fast Node Version Manager written in Rust. Replaces nvm on Windows.' }
-    @{ Id=6;  Name='uv';                     Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://astral.sh/uv/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/astral-sh/uv';                          Desc='Ultra-fast Python package and project manager by Astral (Rust).' }
-    @{ Id=7;  Name='Rye';                    Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                                                       GitHub='https://github.com/astral-sh/rye';                         Desc='Holistic Python project and environment manager. Handles venvs.' }
-    @{ Id=8;  Name='Rustup';                 Cat='Rust';            Icon='[RS] '; Admin=$false; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                                          GitHub='https://github.com/rust-lang/rustup';                      Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.' }
-    @{ Id=9;  Name='WinUtil (Chris Titus)';  Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://christitus.com/win | iex';                                                                                                                                   GitHub='https://github.com/ChrisTitusTech/winutil';                Desc='All-in-one Windows debloat, tweaks, software install GUI.' }
-    @{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                                                    GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.' }
-    @{ Id=11; Name='PowerShell 7';           Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                                                     GitHub='https://github.com/PowerShell/PowerShell';                 Desc='Official Microsoft installer for PowerShell 7 (cross-platform).' }
-    @{ Id=12; Name='Oh My Posh';             Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.' }
-    @{ Id=13; Name='Terminal-Icons';         Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                                       GitHub='https://github.com/devblackops/Terminal-Icons';            Desc='PowerShell module to show file and folder icons in the terminal.' }
-    @{ Id=14; Name='Spicetify CLI';          Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex';                                                                                      GitHub='https://github.com/spicetify/cli';                         Desc='Customize the Spotify desktop client with themes and extensions.' }
-    @{ Id=15; Name='Spicetify Marketplace';  Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex';                                                                  GitHub='https://github.com/spicetify/marketplace';                 Desc='In-app marketplace for Spicetify themes and extensions.' }
-    @{ Id=16; Name='Datatools (Caltech)';    Cat='Dev Tools';       Icon='[DEV]'; Admin=$false; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                                    GitHub='https://github.com/caltechlibrary/datatools';              Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.' }
-) | ForEach-Object { [PSCustomObject]$_ }
+    [PSCustomObject]@{ Id=1;  Name='Scoop';                  Cat='Package Manager'; Icon='[PKG]'; Admin=$false; Cmd='irm https://get.scoop.sh | iex';                                                                                                                                           GitHub='https://github.com/ScoopInstaller/Scoop';                  Desc='Package manager for Windows. No admin needed. User-space installs.' }
+    [PSCustomObject]@{ Id=2;  Name='Chocolatey';             Cat='Package Manager'; Icon='[PKG]'; Admin=$true;  Cmd='Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))'; GitHub='https://github.com/chocolatey/choco';                       Desc='Largest Windows package repo. 10k+ packages. Enterprise-grade.' }
+    [PSCustomObject]@{ Id=3;  Name='Bun';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://bun.sh/install.ps1 | iex';                                                                                                                                    GitHub='https://github.com/oven-sh/bun';                           Desc='All-in-one JS runtime, bundler, test runner and package manager.' }
+    [PSCustomObject]@{ Id=4;  Name='Deno';                   Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://deno.land/install.ps1 | iex';                                                                                                                               GitHub='https://github.com/denoland/deno';                         Desc='Secure TypeScript/JS runtime by Node.js creators. Built-in TS.' }
+    [PSCustomObject]@{ Id=5;  Name='fnm';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://fnm.vercel.app/install | iex';                                                                                                                              GitHub='https://github.com/Schniz/fnm';                            Desc='Fast Node Version Manager written in Rust. Replaces nvm on Windows.' }
+    [PSCustomObject]@{ Id=6;  Name='uv';                     Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://astral.sh/uv/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/astral-sh/uv';                          Desc='Ultra-fast Python package and project manager by Astral (Rust).' }
+    [PSCustomObject]@{ Id=7;  Name='Rye';                    Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                                                       GitHub='https://github.com/astral-sh/rye';                         Desc='Holistic Python project and environment manager. Handles venvs.' }
+    [PSCustomObject]@{ Id=8;  Name='Rustup';                 Cat='Rust';            Icon='[RS] '; Admin=$false; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                                          GitHub='https://github.com/rust-lang/rustup';                      Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.' }
+    [PSCustomObject]@{ Id=9;  Name='WinUtil (Chris Titus)';  Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://christitus.com/win | iex';                                                                                                                                   GitHub='https://github.com/ChrisTitusTech/winutil';                Desc='All-in-one Windows debloat, tweaks, software install GUI.' }
+    [PSCustomObject]@{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                                                    GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.' }
+    [PSCustomObject]@{ Id=11; Name='PowerShell 7';           Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                                                     GitHub='https://github.com/PowerShell/PowerShell';                 Desc='Official Microsoft installer for PowerShell 7 (cross-platform).' }
+    [PSCustomObject]@{ Id=12; Name='Oh My Posh';             Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                                            GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.' }
+    [PSCustomObject]@{ Id=13; Name='Terminal-Icons';         Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                                       GitHub='https://github.com/devblackops/Terminal-Icons';            Desc='PowerShell module to show file and folder icons in the terminal.' }
+    [PSCustomObject]@{ Id=14; Name='Spicetify CLI';          Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex';                                                                                      GitHub='https://github.com/spicetify/cli';                         Desc='Customize the Spotify desktop client with themes and extensions.' }
+    [PSCustomObject]@{ Id=15; Name='Spicetify Marketplace';  Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex';                                                                  GitHub='https://github.com/spicetify/marketplace';                 Desc='In-app marketplace for Spicetify themes and extensions.' }
+    [PSCustomObject]@{ Id=16; Name='Datatools (Caltech)';    Cat='Dev Tools';       Icon='[DEV]'; Admin=$false; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                                    GitHub='https://github.com/caltechlibrary/datatools';              Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.' }
+)
 
 # ==========================================
 # 4. HELPER FUNCTIONS
@@ -147,7 +147,7 @@ function Show-CategoryList {
     Write-Host " $(Format-Color 'FILTER BY CATEGORY' 'BrightBlack')"
     Write-Host ''
     
-    for ($i = 0; $i -lt $categories.Count; $i++) {
+    for ($i = 0; $i -lt @($categories).Length; $i++) {
         Write-Host "  $(Format-Color "[$i]" 'Yellow') $($categories[$i])" -ForegroundColor Gray
     }
     Write-Host ''
@@ -161,7 +161,8 @@ function Show-CategoryList {
 function Show-FilteredCatalog {
     param([array]$Items)
     
-    if (-not $Items -or $Items.Count -eq 0) {
+    $itemArray = @($Items)
+    if (-not $itemArray -or $itemArray.Length -eq 0) {
         Write-Host "  $(Format-Color 'No tools found matching criteria.' 'Yellow')"
         return
     }
@@ -171,7 +172,7 @@ function Show-FilteredCatalog {
         'Rust'='Red'; 'System'='Magenta'; 'Shell / UX'='Cyan'; 'Media'='Magenta'; 'Dev Tools'='BrightBlack'
     }
 
-    foreach ($tool in $Items) {
+    foreach ($tool in $itemArray) {
         $cColor = if ($colorMap.ContainsKey($tool.Cat)) { $colorMap[$tool.Cat] } else { 'White' }
         $adminBadge = if ($tool.Admin) { $(Format-Color ' [ADMIN REQUIRED]' 'Red') } else { '' }
         
@@ -280,12 +281,12 @@ function Invoke-SearchFlow {
     })
     
     Show-HeaderBanner
-    Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $keyword 'Cyan' -Bold)  $(Format-Color "($($searchResults.Count) found)" 'BrightBlack')"
+    Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $keyword 'Cyan' -Bold)  $(Format-Color "($(@($searchResults).Length) found)" 'BrightBlack')"
     Write-Host ''
     
     Show-FilteredCatalog -Items $searchResults
     
-    if ($searchResults.Count -gt 0) {
+    if (@($searchResults).Length -gt 0) {
         $idInput = Read-Host " Enter tool $(Format-Color '[ID]' 'Yellow') to review and run, or press Enter to go back"
         if ($idInput -match '^\d+$') {
             $matched = $searchResults | Where-Object { $_.Id -eq [int]$idInput }
@@ -327,19 +328,19 @@ function Start-IrmHub {
             if ($userInput -match '^\d+$') {
                 $categoryIndex = [int]$userInput
                 
-                if ($categoryIndex -ge 0 -and $categoryIndex -lt $catList.Count) {
+                if ($categoryIndex -ge 0 -and $categoryIndex -lt @($catList).Length) {
                     $selectedCategory = $catList[$categoryIndex]
                     
                     $filteredItems = @()
                     if ($selectedCategory -eq 'All') {
-                        $filteredItems = $script:CATALOG
+                        $filteredItems = @($script:CATALOG)
                     } else {
-                        $filteredItems = $script:CATALOG | Where-Object { $_.Cat -eq $selectedCategory }
+                        $filteredItems = @($script:CATALOG | Where-Object { $_.Cat -eq $selectedCategory })
                     }
                     
                     Show-HeaderBanner
                     $displayHeader = if ($selectedCategory -eq 'All') { 'ENTIRE CATALOG' } else { $selectedCategory.ToUpper() }
-                    Write-Host " $(Format-Color $displayHeader 'Cyan' -Bold)  $(Format-Color "($($filteredItems.Count) tools)" 'BrightBlack')"
+                    Write-Host " $(Format-Color $displayHeader 'Cyan' -Bold)  $(Format-Color "($(@($filteredItems).Length) tools)" 'BrightBlack')"
                     Write-Host ''
                     
                     Show-FilteredCatalog -Items $filteredItems
