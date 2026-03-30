@@ -19,7 +19,10 @@ $ErrorActionPreference = 'Stop'
 #  Enforce TLS 1.2+ for all subsequent web requests in this session.
 #  Never store, log or transmit any user data.
 # ─────────────────────────────────────────────────────────────────────────────
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+$_tls = [Net.SecurityProtocolType]::Tls12
+try { $_tls = $_tls -bor [Net.SecurityProtocolType]::Tls13 } catch {}
+[Net.ServicePointManager]::SecurityProtocol = $_tls
+Remove-Variable _tls
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  ANSI / COLOR HELPERS
