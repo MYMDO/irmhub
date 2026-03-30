@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IRMHUB — PowerShell Tool Launcher</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --cyan: #39d0d8;
+      --green: #3fb950;
+      --yellow: #e3b341;
+      --red: #f85149;
+      --purple: #bc8cff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+    .logo {
+      color: var(--cyan);
+      font-size: clamp(10px, 2vw, 15px);
+      line-height: 1.2;
+      letter-spacing: 0.05em;
+      white-space: pre;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 28px;
+      max-width: 720px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .cmd-box {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color .15s;
+      position: relative;
+    }
+    .cmd-box:hover { border-color: var(--cyan); }
+    .cmd-box code {
+      color: var(--green);
+      font-size: 14px;
+      flex: 1;
+      word-break: break-all;
+    }
+    .copy-btn {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: var(--border); color: var(--text); }
+    .copy-btn.copied { color: var(--green); border-color: var(--green); }
+    .warning {
+      background: rgba(227,179,65,.07);
+      border: 1px solid rgba(227,179,65,.3);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--yellow);
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+    .warning strong { color: var(--yellow); }
+    .security-list {
+      list-style: none;
+      margin-top: 10px;
+    }
+    .security-list li {
+      padding: 5px 0;
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      gap: 10px;
+    }
+    .security-list li .icon { color: var(--green); min-width: 16px; }
+    .security-list li .icon.warn { color: var(--yellow); }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .tool-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      background: #010409;
+    }
+    .tool-card .tool-name {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--cyan);
+      margin-bottom: 3px;
+    }
+    .tool-card .tool-cat {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+    .tool-card .tool-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    footer {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      margin-top: 32px;
+      line-height: 1.8;
+    }
+    footer a { color: var(--cyan); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<pre class="logo">
+  ██╗██████╗ ███╗   ███╗    ██╗  ██╗██╗   ██╗██████╗ 
+  ██║██╔══██╗████╗ ████║    ██║  ██║██║   ██║██╔══██╗
+  ██║██████╔╝██╔████╔██║    ███████║██║   ██║██████╔╝
+  ██║██╔══██╗██║╚██╔╝██║    ██╔══██║██║   ██║██╔══██╗
+  ██║██║  ██║██║ ╚═╝ ██║    ██║  ██║╚██████╔╝██████╔╝
+  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ 
+</pre>
+
+<p class="tagline">Universal PowerShell Tool Launcher &nbsp;•&nbsp; irm | iex &nbsp;•&nbsp; Zero Telemetry &nbsp;•&nbsp; Open Source</p>
+
+<div class="card">
+  <h2>▶ Launch IRMHUB</h2>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Open PowerShell (or Windows Terminal) and run:</p>
+  <div class="cmd-box" onclick="copyCmd(this)">
+    <code id="main-cmd">irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex</code>
+    <button class="copy-btn" onclick="copyCmd(event)">Copy</button>
+  </div>
+  <div class="warning">
+    <strong>⚠ Security reminder:</strong> Always verify the URL before running any  irm | iex  command.
+    Inspect the raw script at the link above before executing. IRMHUB shows you every command before running it and requires manual confirmation.
+  </div>
+</div>
+
+<div class="card">
+  <h2>🛡 Security &amp; Privacy</h2>
+  <ul class="security-list">
+    <li><span class="icon">✓</span> TLS 1.2+ enforced on all connections</li>
+    <li><span class="icon">✓</span> Every command previewed before execution — type YES to confirm</li>
+    <li><span class="icon">✓</span> Admin-required tools clearly flagged and checked at runtime</li>
+    <li><span class="icon">✓</span> Zero telemetry — no HTTP calls except to the tool you chose</li>
+    <li><span class="icon">✓</span> No credentials, paths or system info stored or transmitted</li>
+    <li><span class="icon">✓</span> Runs in a child scope — does not pollute your session globals</li>
+    <li><span class="icon warn">!</span> You are responsible for reviewing each tool's GitHub source</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>📦 Included Tools (v1.0)</h2>
+  <div class="tool-grid">
+    <div class="tool-card"><div class="tool-name">Scoop</div><div class="tool-cat">Package Manager</div><div class="tool-desc">Windows package manager. No admin. User-space installs.</div></div>
+    <div class="tool-card"><div class="tool-name">Chocolatey</div><div class="tool-cat">Package Manager</div><div class="tool-desc">Largest Windows package repo. 10k+ packages.</div></div>
+    <div class="tool-card"><div class="tool-name">Bun</div><div class="tool-cat">JavaScript</div><div class="tool-desc">All-in-one JS runtime, bundler, test runner.</div></div>
+    <div class="tool-card"><div class="tool-name">Deno</div><div class="tool-cat">JavaScript</div><div class="tool-desc">Secure TypeScript runtime. Built-in TS support.</div></div>
+    <div class="tool-card"><div class="tool-name">fnm</div><div class="tool-cat">JavaScript</div><div class="tool-desc">Fast Node Version Manager. Rust-powered.</div></div>
+    <div class="tool-card"><div class="tool-name">uv</div><div class="tool-cat">Python</div><div class="tool-desc">Ultra-fast Python package manager by Astral.</div></div>
+    <div class="tool-card"><div class="tool-name">Rye</div><div class="tool-cat">Python</div><div class="tool-desc">Holistic Python project &amp; env manager.</div></div>
+    <div class="tool-card"><div class="tool-name">Rustup</div><div class="tool-cat">Rust</div><div class="tool-desc">Official Rust toolchain installer.</div></div>
+    <div class="tool-card"><div class="tool-name">WinUtil</div><div class="tool-cat">System</div><div class="tool-desc">Windows debloat, tweaks, software install GUI.</div></div>
+    <div class="tool-card"><div class="tool-name">MAS</div><div class="tool-cat">System</div><div class="tool-desc">Microsoft Activation Scripts. HWID / KMS38.</div></div>
+    <div class="tool-card"><div class="tool-name">PowerShell 7</div><div class="tool-cat">System</div><div class="tool-desc">Official PS7 MSI installer by Microsoft.</div></div>
+    <div class="tool-card"><div class="tool-name">Oh My Posh</div><div class="tool-cat">Shell / UX</div><div class="tool-desc">Custom prompt engine. 200+ themes.</div></div>
+    <div class="tool-card"><div class="tool-name">Terminal-Icons</div><div class="tool-cat">Shell / UX</div><div class="tool-desc">File/folder icons in the terminal.</div></div>
+    <div class="tool-card"><div class="tool-name">Spicetify CLI</div><div class="tool-cat">Media</div><div class="tool-desc">Customize Spotify with themes &amp; extensions.</div></div>
+    <div class="tool-card"><div class="tool-name">Spicetify Marketplace</div><div class="tool-cat">Media</div><div class="tool-desc">In-app store for Spicetify addons.</div></div>
+    <div class="tool-card"><div class="tool-name">Datatools</div><div class="tool-cat">Dev Tools</div><div class="tool-desc">CLI tools for JSON/CSV/XLSX processing.</div></div>
+  </div>
+</div>
+
+<footer>
+  <a href="https://github.com/MYMDO/irmhub">GitHub</a> &nbsp;•&nbsp;
+  MIT License &nbsp;•&nbsp; No affiliation with any listed tools &nbsp;•&nbsp;
+  <a href="https://github.com/MYMDO/irmhub/issues">Submit a tool</a>
+</footer>
+
+<script>
+function copyCmd(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const code = document.getElementById('main-cmd').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
