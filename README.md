@@ -1,151 +1,110 @@
-# IRMHUB — Universal PowerShell Tool Launcher
+<div align="center">
 
-> **One command to rule them all.**  
-> An interactive TUI that aggregates all popular open-source utilities  
-> installable via `irm ... | iex` — with full security transparency.
+# ⚡ IRMHUB
+**Universal PowerShell Tool Launcher**
+
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PowerShell Version](https://img.shields.io/badge/PowerShell-5.1%20%7C%207.x-blue.svg)](https://github.com/PowerShell/PowerShell)
+[![Zero Telemetry](https://img.shields.io/badge/Telemetry-None-success.svg)](#privacy--security-model)
+
+> *One command to rule them all.*<br>
+> An interactive TUI that aggregates popular open-source utilities installable via `irm ... | iex` with full security transparency.
+
+</div>
+
+---
+
+## 🚀 Quick Start
+
+Open PowerShell (or Windows Terminal) and run:
 
 ```powershell
 irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex
 ```
 
----
+> **Note:** We strongly recommend inspecting the raw script at the URL above before execution, as is best practice for any `irm | iex` command.
 
-## What it does
+## 📖 Overview
 
-IRMHUB is a PowerShell TUI (Text User Interface) that:
+IRMHUB is a premium, zero-dependency PowerShell TUI (Text User Interface) designed for developers, system administrators, and power users. It simplifies the discovery and securely manages the installation of essential Windows-based open-source CLI tools.
 
-- **Lists** all popular open-source tools installable via `irm | iex`  
-- **Categorizes** them (Package Managers, JS, Python, Rust, System, Shell/UX, Media, Dev Tools)  
-- **Searches** by name, keyword, or category  
-- **Shows the exact command** before any execution  
-- **Requires manual confirmation** (`YES`) before running anything  
-- **Checks admin rights** and warns if elevation is needed  
-- **Runs zero telemetry** — no HTTP calls except to the tool URL you choose  
+### Core Features
 
----
+- **Centralized Catalog:** Organizes tools across categories (Package Managers, JS, Python, Rust, System, Shell/UX, Media, Dev Tools).
+- **Search Engine:** Quickly filter the catalog by name, keyword, or category.
+- **Security Check:** Previews the *exact* command before making any system changes.
+- **Privilege Awareness:** Automatically detects and warns if a tool requires Administrator elevation.
+- **Zero Telemetry:** Makes no external HTTP calls other than to the specific tool script you select.
 
-## Security Model
+## 🛡️ Privacy & Security Model
 
-| Guarantee | How |
-|-----------|-----|
-| TLS 1.2+ enforced | `[Net.ServicePointManager]::SecurityProtocol` set at startup |
-| Command preview | Shown in green before any execution |
-| Explicit confirmation | User must type `YES` (not Enter) |
-| Admin check | Checks `WindowsPrincipal.IsInRole(Administrator)` before admin tools |
-| No telemetry | Only outbound request is to the tool you pick |
-| Child scope execution | `[scriptblock]::Create()` — no global scope pollution |
-| HTTPS only | All catalog URLs start with `https://` |
+IRMHUB is built on a foundation of absolute transparency and security. 
 
----
+| Security Guarantee | Technical Implementation |
+|:-------------------|:-------------------------|
+| **Forced TLS 1.2+** | `[Net.ServicePointManager]::SecurityProtocol` is dynamically updated at startup. |
+| **Command Preview** | Before execution, the payload command is printed in plain text for review. |
+| **Explicit Consent** | Execution is paused until the user manually types `YES`. |
+| **Elevation Check** | Leverages `WindowsPrincipal.IsInRole(Administrator)` to fail safely on admin tools. |
+| **Zero Logging** | No usage data, hardware IDs, or IPs are logged, persisted, or transmitted. |
+| **Isolated Scope** | Uses `[scriptblock]::Create()` to prevent global scope pollution of your session. |
+| **Strict HTTPS** | The catalog enforces `https://` for all target repositories and payloads. |
 
-## Included Tools (v1.0)
+## 📦 Included Tools Registry
 
-| # | Tool | Category | Admin? |
-|---|------|----------|--------|
-| 1 | Scoop | Package Manager | No |
-| 2 | Chocolatey | Package Manager | Yes |
-| 3 | Bun | JavaScript | No |
-| 4 | Deno | JavaScript | No |
-| 5 | fnm | JavaScript | No |
-| 6 | uv (Astral) | Python | No |
-| 7 | Rye | Python | No |
-| 8 | Rustup | Rust | No |
-| 9 | WinUtil (Chris Titus Tech) | System | Yes |
-| 10 | MAS (Microsoft Activation Scripts) | System | Yes |
-| 11 | PowerShell 7 | System | Yes |
-| 12 | Oh My Posh | Shell / UX | No |
-| 13 | Terminal-Icons | Shell / UX | No |
-| 14 | Spicetify CLI | Media | No |
-| 15 | Spicetify Marketplace | Media | No |
-| 16 | Datatools (Caltech) | Dev Tools | No |
+IRMHUB ships with the following curated open-source projects:
 
----
+| Tool | Category | Admin Required |
+|:-----|:---------|:--------------:|
+| **Scoop** | Package Manager | No |
+| **Chocolatey** | Package Manager | Yes |
+| **Bun** | JavaScript | No |
+| **Deno** | JavaScript | No |
+| **fnm** | JavaScript | No |
+| **uv** (Astral) | Python | No |
+| **Rye** | Python | No |
+| **Rustup** | Rust | No |
+| **WinUtil** | System | Yes |
+| **MAS** | System | Yes |
+| **PowerShell 7** | System | Yes |
+| **Oh My Posh** | Shell / UX | No |
+| **Terminal-Icons** | Shell / UX | No |
+| **Spicetify CLI** | Media | No |
+| **Spicetify Marketplace**| Media | No |
+| **Datatools** | Dev Tools | No |
 
-## How to Deploy (GitHub + GitHub Pages)
+## 🛠️ Modifying the Catalog
 
-### Step 1 — Create the repository
-
-```
-gh repo create irmhub --public --description "Universal PowerShell Tool Launcher"
-cd irmhub
-```
-
-### Step 2 — Add files
-
-```
-irmhub.ps1     ← main PowerShell script (the launcher)
-index.html     ← landing page (optional, for GitHub Pages)
-README.md      ← this file
-```
-
-### Step 3 — Enable GitHub Pages
-
-Go to **Settings → Pages → Source → Deploy from branch → main → / (root)**
-
-Your landing page will be live at:  
-`https://MYMDO.github.io/irmhub/`
-
-### Step 4 — Run command
+Want to add your favorite tool to your fork? Simply edit `irmhub.ps1` and append a new hashtable to the `$script:CATALOG` array:
 
 ```powershell
-irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex
-```
-
----
-
-## Adding a New Tool
-
-Edit `irmhub.ps1` — add a new `[PSCustomObject]` to the `$CATALOG` array:
-
-```powershell
-[PSCustomObject]@{
-    Id         = 17                          # next available number
-    Name       = 'MyTool'
-    Desc       = 'Short description'
-    Category   = 'Dev Tools'                 # must match existing or new category
-    CatIcon    = '[DEV]'
-    Cmd        = 'irm https://example.com/install.ps1 | iex'
-    GitHub     = 'https://github.com/org/repo'
-    NeedsAdmin = $false
+@{ 
+    Id      = 17; 
+    Name    = 'MyTool'; 
+    Cat     = 'Dev Tools'; 
+    Icon    = '[DEV]'; 
+    Admin   = $false; 
+    Cmd     = 'irm https://example.com/install.ps1 | iex'; 
+    GitHub  = 'https://github.com/org/repo'; 
+    Desc    = 'A brief description of what this does.' 
 }
 ```
 
-Then submit a PR — tools will be reviewed for:
-- Active GitHub repository with ≥100 stars (or special exception)
-- HTTPS-only install URL
-- No malware / obfuscation in the install script
-- Clearly documented purpose
+### Pull Request Guidelines
+If you are submitting a PR to the main repository, the tool must meet the following criteria:
+1. Backed by an active public repository (e.g., GitHub) with verifiable community trust.
+2. The installation payload must be strictly `https://`.
+3. The script must contain no obfuscated code.
+4. Functionality must align with development, system administration, or CLI enhancement.
 
----
+## ⚙️ Requirements
 
-## Requirements
+- **OS:** Windows 10 / 11
+- **Engine:** PowerShell 5.1 (Built-in) or PowerShell 7+ (Core)
+- **Network:** Active internet connection
 
-- Windows 10 / 11
-- PowerShell 5.1+ (built into Windows) or PowerShell 7+
-- Internet connection
+## 📄 License & Disclaimer
 
----
+This project is licensed under the [MIT License](LICENSE).
 
-## Privacy
-
-IRMHUB collects **nothing**. It does not:
-- Send analytics, crash reports, or usage stats
-- Read or transmit your filesystem, credentials, or environment variables
-- Persist any data between sessions
-- Phone home
-
-The only network request made is the one to install the tool *you explicitly chose and confirmed*.
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE)
-
----
-
-## Disclaimer
-
-IRMHUB is not affiliated with or endorsed by any of the listed tools.  
-Each tool is the property of its respective authors.  
-Always review the source code of any script before running it.
+**Disclaimer:** IRMHUB is an aggregator tool. It is not affiliated with, nor does it explicitly endorse, any of the third-party tools listed in its catalog. Each tool is the property of its respective authors. *Always review third-party source code before executing it on your machine.*
