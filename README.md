@@ -76,6 +76,7 @@ IRMHUB ships with the following curated open-source projects:
 | **Win11Debloat (Raphire)** | System | Yes |
 | **Microsoft PowerToys** | System | Yes |
 | **UniGetUI (WingetUI)** | System | Yes |
+| **Windhawk** | System | Yes |
 
 ## 🛠️ Modifying the Catalog
 
