@@ -72,6 +72,7 @@ IRMHUB ships with the following curated open-source projects:
 | **Spicetify CLI** | Media | No |
 | **Spicetify Marketplace**| Media | No |
 | **Datatools** | Dev Tools | No |
+| **InstallOffice Tool** | System | Yes |
 
 ## 🛠️ Modifying the Catalog
 
