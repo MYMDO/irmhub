@@ -3,43 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#050511">
+    
     <title>IRMHUB — Universal PowerShell Tool Launcher</title>
     <meta name="description" content="An interactive TUI that aggregates popular open-source utilities installable via irm | iex. Secure, transparent, and telemetry-free.">
-    <!-- Fonts -->
+    <meta name="keywords" content="PowerShell, Windows, tool launcher, package manager, open-source, CLI, TUI, irm, iex, Windows tools">
+    <meta name="author" content="MYMDO">
+    <meta name="robots" content="index, follow">
+    
+    <link rel="canonical" href="https://mymdo.github.io/irmhub/">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mymdo.github.io/irmhub/">
+    <meta property="og:title" content="IRMHUB — Universal PowerShell Tool Launcher">
+    <meta property="og:description" content="An interactive TUI that aggregates popular open-source utilities installable via irm | iex. Zero telemetry. HTTPS-only. Confirm before execute.">
+    <meta property="og:site_name" content="IRMHUB">
+    <meta property="og:locale" content="en_US">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@MYMDO">
+    <meta name="twitter:title" content="IRMHUB — Universal PowerShell Tool Launcher">
+    <meta name="twitter:description" content="One command to rule them all. Interactive TUI for Windows tools.">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23050511' width='100' height='100' rx='20'/><text y='.9em' x='50%' text-anchor='middle' font-size='70'>⚡</text></svg>">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "IRMHUB",
+        "description": "Universal PowerShell Tool Launcher - An interactive TUI that aggregates popular open-source utilities installable via irm | iex",
+        "url": "https://github.com/MYMDO/irmhub",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows",
+        "programmingLanguage": "PowerShell",
+        "license": "https://opensource.org/licenses/MIT",
+        "author": {
+            "@type": "Organization",
+            "name": "MYMDO",
+            "url": "https://github.com/MYMDO"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         :root {
-            /* Base Colors */
             --bg-color: #050511;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
-            
-            /* Accents */
             --accent-cyan: #22d3ee;
             --accent-purple: #c084fc;
             --accent-blue: #3b82f6;
             --accent-green: #10b981;
             --accent-yellow: #f59e0b;
             --accent-red: #ef4444;
-
-            /* UI Surfaces */
             --surface-glass: rgba(255, 255, 255, 0.03);
-            --surface-glass-hover: rgba(255, 255, 255, 0.06);
             --border-glass: rgba(255, 255, 255, 0.08);
             --border-glow: rgba(34, 211, 238, 0.4);
-
-            /* Typography */
-            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-            --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+            --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -55,8 +98,9 @@
             align-items: center;
             padding: 60px 20px;
             overflow-x: hidden;
-            line-height: 1.5;
+            line-height: 1.6;
             position: relative;
+            margin: 0;
         }
 
         ::selection {
@@ -64,7 +108,23 @@
             color: #fff;
         }
 
-        /* Abstract UI shapes for depth */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-glass);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         .glow-orb {
             position: absolute;
             width: 40vw;
@@ -77,6 +137,7 @@
             left: -10vw;
             z-index: -1;
             animation: pulseOrb 10s ease-in-out infinite alternate;
+            pointer-events: none;
         }
 
         .glow-orb-2 {
@@ -91,23 +152,28 @@
             right: -10vw;
             z-index: -1;
             animation: pulseOrb 12s ease-in-out infinite alternate-reverse;
+            pointer-events: none;
         }
 
         @keyframes pulseOrb {
-            0% { transform: scale(1) translate(0px, 0px); opacity: 0.06; }
+            0% { transform: scale(1) translate(0, 0); opacity: 0.06; }
             100% { transform: scale(1.1) translate(30px, -20px); opacity: 0.1; }
-        }
-
-        /* Header block */
-        .hero {
-            text-align: center;
-            margin-bottom: 50px;
-            animation: fadeInDown 0.8s ease-out;
         }
 
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
         }
 
         .logo {
@@ -135,7 +201,6 @@
             color: var(--accent-purple);
         }
 
-        /* Main Container & Glass Cards */
         .container {
             width: 100%;
             max-width: 900px;
@@ -151,23 +216,19 @@
             border: 1px solid var(--border-glass);
             border-radius: 16px;
             padding: 32px;
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
             animation: fadeInUp 0.8s ease-out;
             animation-fill-mode: both;
         }
         
-        .glass-card:nth-child(1) { animation-delay: 0.1s; }
-        .glass-card:nth-child(2) { animation-delay: 0.2s; }
-        .glass-card:nth-child(3) { animation-delay: 0.3s; }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .glass-card:nth-of-type(1) { animation-delay: 0.1s; }
+        .glass-card:nth-of-type(2) { animation-delay: 0.2s; }
+        .glass-card:nth-of-type(3) { animation-delay: 0.3s; }
 
         .glass-card:hover {
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6), 0 0 20px 0 rgba(34, 211, 238, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 20px 0 rgba(34, 211, 238, 0.05);
             border-color: rgba(255, 255, 255, 0.15);
         }
 
@@ -186,9 +247,9 @@
             color: var(--accent-cyan);
             width: 20px;
             height: 20px;
+            flex-shrink: 0;
         }
 
-        /* Command Box UI */
         .cmd-container {
             position: relative;
             margin-bottom: 20px;
@@ -227,6 +288,12 @@
             box-shadow: 0 0 15px rgba(34, 211, 238, 0.1) inset;
         }
 
+        .cmd-box:focus-within {
+            border-color: var(--accent-cyan);
+            outline: 2px solid rgba(34, 211, 238, 0.3);
+            outline-offset: 2px;
+        }
+
         .cmd-box code {
             font-family: var(--font-mono);
             color: var(--accent-green);
@@ -257,6 +324,7 @@
             align-items: center;
             gap: 6px;
             z-index: 2;
+            flex-shrink: 0;
         }
 
         .copy-btn:hover {
@@ -265,13 +333,32 @@
             transform: scale(1.05);
         }
 
+        .copy-btn:focus {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 2px;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+
         .copy-btn.copied {
             background: var(--accent-green);
             color: var(--bg-color);
             border-color: var(--accent-green);
         }
 
-        /* Alert Box */
+        .copy-btn .btn-text {
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .intro-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+
         .alert {
             display: flex;
             align-items: flex-start;
@@ -291,7 +378,10 @@
             margin-top: 2px;
         }
 
-        /* Security List */
+        .alert strong {
+            color: var(--text-main);
+        }
+
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -303,7 +393,7 @@
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
             border: 1px solid var(--border-glass);
             transition: transform 0.2s, background 0.2s;
@@ -311,7 +401,12 @@
 
         .feature-item:hover {
             transform: translateX(5px);
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-item.warning {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .feature-icon {
@@ -325,7 +420,7 @@
             color: var(--accent-green);
             flex-shrink: 0;
         }
-        
+
         .feature-icon.warn {
             background: rgba(245, 158, 11, 0.1);
             color: var(--accent-yellow);
@@ -336,7 +431,6 @@
             color: var(--text-main);
         }
 
-        /* Tools Grid */
         .tools-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -362,7 +456,7 @@
             inset: 0;
             border-radius: 12px;
             padding: 1px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
@@ -374,7 +468,13 @@
             transform: translateY(-4px);
             background: rgba(255, 255, 255, 0.04);
             border-color: rgba(34, 211, 238, 0.3);
-            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.5), 0 0 15px rgba(34, 211, 238, 0.1);
+            box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.5), 0 0 15px rgba(34, 211, 238, 0.1);
+        }
+
+        .tool-card:focus-within {
+            border-color: var(--accent-cyan);
+            outline: 2px solid rgba(34, 211, 238, 0.2);
+            outline-offset: 2px;
         }
 
         .tool-header {
@@ -382,6 +482,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
+            gap: 8px;
         }
 
         .tool-name {
@@ -398,9 +499,10 @@
             font-weight: 600;
             padding: 4px 8px;
             border-radius: 4px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             color: var(--accent-cyan);
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
         }
 
         .tool-desc {
@@ -409,12 +511,20 @@
             line-height: 1.5;
             flex-grow: 1;
         }
-        
-        /* Category specific colors (used inline usually, but defined here for structure) */
-        .cat-pkg { color: var(--accent-green); background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.2); }
-        .cat-js { color: var(--accent-yellow); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); }
-        .cat-py { color: var(--accent-blue); background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); }
-        .cat-sys { color: var(--accent-red); background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); }
+
+        .cat-pkg { color: var(--accent-green); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+        .cat-js { color: var(--accent-yellow); background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); }
+        .cat-py { color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); }
+        .cat-sys { color: var(--accent-red); background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
+        .cat-rust { color: #fca5a5; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.2); }
+        .cat-shell { color: #e879f9; background: rgba(232, 121, 249, 0.1); border-color: rgba(232, 121, 249, 0.2); }
+
+        .tools-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
 
         footer {
             margin-top: 60px;
@@ -454,218 +564,291 @@
             transform-origin: bottom left;
         }
 
-        /* Responsive */
+        footer a:focus {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 2px;
+        }
+
+        footer .divider {
+            opacity: 0.5;
+            margin: 0 5px;
+        }
+
+        footer .disclaimer {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
         @media (max-width: 600px) {
+            body {
+                padding: 40px 16px;
+            }
+
+            .glass-card {
+                padding: 24px 20px;
+            }
+
             .cmd-box {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 12px;
             }
+
             .copy-btn {
                 justify-content: center;
             }
+
             .cmd-box code {
                 font-size: 0.9rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
+    <div class="glow-orb" aria-hidden="true"></div>
+    <div class="glow-orb-2" aria-hidden="true"></div>
 
-<div class="glow-orb"></div>
-<div class="glow-orb-2"></div>
+    <header class="hero">
+        <h1 class="logo">IRMHUB</h1>
+        <p class="tagline">Universal PowerShell Tool Launcher<br> <span class="tagline-accent">One command to rule them all.</span></p>
+    </header>
 
-<header class="hero">
-    <h1 class="logo">IRMHUB</h1>
-    <p class="tagline">Universal PowerShell Tool Launcher <br/> <span class="tagline-accent">One command to rule them all.</span></p>
-</header>
-
-<main class="container">
-    
-    <!-- Quick Start Card -->
-    <section class="glass-card">
-        <h2 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-            Launch IRMHUB
-        </h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">Open PowerShell (or Windows Terminal) and run:</p>
-        
-        <div class="cmd-container">
-            <div class="cmd-box" onclick="copyCmd(this)">
-                <code><span class="powershell-prefix">PS ></span><span id="main-cmd">irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex</span></code>
-                <button class="copy-btn" onclick="copyCmd(event)" aria-label="Copy command">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                    <span class="btn-text">Copy</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="alert">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            <div>
-                <strong style="color: var(--text-main);">Security reminder:</strong> Always verify the URL before running any <code>irm | iex</code> command. Inspect the raw script at the link above before executing. IRMHUB shows you every command before running it and requires manual confirmation.
-            </div>
-        </div>
-    </section>
-
-    <!-- Security & Privacy -->
-    <section class="glass-card">
-        <h2 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Security Model & Privacy
-        </h2>
-        
-        <div class="features-grid">
-            <div class="feature-item">
-                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-                <div class="feature-text">TLS 1.2+ enforced dynamically</div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-                <div class="feature-text">Zero telemetry, no outbound logs</div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-                <div class="feature-text">Runs in isolated child scope</div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-                <div class="feature-text">Requires manual typing of "YES"</div>
-            </div>
-            <div class="feature-item" style="grid-column: 1 / -1; background: rgba(0,0,0,0.3);">
-                <div class="feature-icon warn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
-                <div class="feature-text">You are responsible for reviewing each third-party tool's GitHub source.</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Included Tools -->
-    <section class="glass-card">
-        <h2 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            Included Tools Catalog (v1.0)
-        </h2>
-        
-        <div class="tools-grid">
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Scoop</span>
-                    <span class="tool-cat cat-pkg">Package Mgr</span>
-                </div>
-                <div class="tool-desc">Windows package manager. No admin required, user-space installations.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Chocolatey</span>
-                    <span class="tool-cat cat-pkg">Package Mgr</span>
-                </div>
-                <div class="tool-desc">Largest Windows package repository providing enterprise-grade software management.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Bun</span>
-                    <span class="tool-cat cat-js">JavaScript</span>
-                </div>
-                <div class="tool-desc">All-in-one blazing fast JS runtime, bundler, test runner, and package manager.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Deno</span>
-                    <span class="tool-cat cat-js">JavaScript</span>
-                </div>
-                <div class="tool-desc">Secure TypeScript and JavaScript runtime built with robust security primitives.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">uv by Astral</span>
-                    <span class="tool-cat cat-py">Python</span>
-                </div>
-                <div class="tool-desc">An extremely fast Python package and project manager, written in Rust.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Rustup</span>
-                    <span class="tool-cat" style="color: #fca5a5; background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2);">Rust</span>
-                </div>
-                <div class="tool-desc">The official toolchain installer for the Rust programming language.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">WinUtil</span>
-                    <span class="tool-cat cat-sys">System</span>
-                </div>
-                <div class="tool-desc">In-depth Windows optimization GUI by Chris Titus Tech (debloat, tweaks, installs).</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Oh My Posh</span>
-                    <span class="tool-cat" style="color: #e879f9; background: rgba(232,121,249,0.1); border-color: rgba(232,121,249,0.2);">Shell / UX</span>
-                </div>
-                <div class="tool-desc">Custom prompt engine for any shell. Over 200 themes with Nerd Font integration.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">InstallOffice Tool</span>
-                    <span class="tool-cat cat-sys">System</span>
-                </div>
-                <div class="tool-desc">Official Microsoft Office Installation Tool. Install MS Office apps via CLI.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">Win11Debloat (Raphire)</span>
-                    <span class="tool-cat cat-sys">System</span>
-                </div>
-                <div class="tool-desc">Remove bloatware, disable telemetry, and customize your Windows experience quickly.</div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-header">
-                    <span class="tool-name">WinGet-CLI (LTSC/LTSB)</span>
-                    <span class="tool-cat cat-sys">System</span>
-                </div>
-                <div class="tool-desc">Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.</div>
-            </div>
-        </div>
-        <div style="text-align: center; margin-top: 20px; color: var(--text-muted); font-size: 0.9rem;">
-            ... and a curated selection of advanced Dev Tools and Media managers.
-        </div>
-    </section>
-
-</main>
-
-<footer>
-    <div>
-        <a href="https://github.com/MYMDO/irmhub" target="_blank" rel="noopener">GitHub Repository</a> •
-        <span style="opacity: 0.5;">MIT License</span> •
-        <a href="https://github.com/MYMDO/irmhub/issues" target="_blank" rel="noopener">Submit a Tool</a>
-    </div>
-    <div style="margin-top: 12px; font-size: 0.8rem; opacity: 0.5;">
-        Not affiliated with the respective owners of the listed tools. Use at your own risk.
-    </div>
-</footer>
-
-<script>
-    function copyCmd(e) {
-        if (e && e.stopPropagation) e.stopPropagation();
-        const codeText = document.getElementById('main-cmd').textContent;
-        navigator.clipboard.writeText(codeText).then(() => {
-            const btn = document.querySelector('.copy-btn');
-            const btnText = btn.querySelector('.btn-text');
-            const icon = btn.querySelector('.copy-icon');
+    <main class="container">
+        <section class="glass-card" aria-labelledby="launch-title">
+            <h2 class="card-title" id="launch-title">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                Launch IRMHUB
+            </h2>
+            <p class="intro-text">Open PowerShell (or Windows Terminal) and run:</p>
             
-            // Success state
-            btn.classList.add('copied');
+            <div class="cmd-container">
+                <div class="cmd-box" role="button" tabindex="0" aria-label="Copy install command" onclick="copyCommand()" onkeydown="handleKeydown(event)">
+                    <code><span class="powershell-prefix">PS ></span><span id="install-cmd">irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex</span></code>
+                    <button class="copy-btn" type="button" aria-label="Copy to clipboard" onclick="copyCommand(event)">
+                        <svg class="copy-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        <span class="btn-text">Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="alert" role="alert">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <div>
+                    <strong>Security reminder:</strong> Always verify the URL before running any <code>irm | iex</code> command. Inspect the raw script at the link above before executing. IRMHUB shows you every command before running it and requires manual confirmation.
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card" aria-labelledby="security-title">
+            <h2 class="card-title" id="security-title">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Security Model & Privacy
+            </h2>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                    <span class="feature-text">TLS 1.2+ enforced dynamically</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                    <span class="feature-text">Zero telemetry, no outbound logs</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                    <span class="feature-text">Runs in isolated child scope</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                    <span class="feature-text">Requires manual typing of "YES"</span>
+                </div>
+                <div class="feature-item warning">
+                    <div class="feature-icon warn" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+                    <span class="feature-text">You are responsible for reviewing each third-party tool's GitHub source.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card" aria-labelledby="tools-title">
+            <h2 class="card-title" id="tools-title">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                Included Tools Catalog <span style="color: var(--text-muted); font-weight: 400;">(v1.0)</span>
+            </h2>
+            
+            <div class="tools-grid">
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Scoop</h3>
+                        <span class="tool-cat cat-pkg">Package Mgr</span>
+                    </div>
+                    <p class="tool-desc">Windows package manager. No admin required, user-space installations.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Chocolatey</h3>
+                        <span class="tool-cat cat-pkg">Package Mgr</span>
+                    </div>
+                    <p class="tool-desc">Largest Windows package repository providing enterprise-grade software management.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Bun</h3>
+                        <span class="tool-cat cat-js">JavaScript</span>
+                    </div>
+                    <p class="tool-desc">All-in-one blazing fast JS runtime, bundler, test runner, and package manager.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Deno</h3>
+                        <span class="tool-cat cat-js">JavaScript</span>
+                    </div>
+                    <p class="tool-desc">Secure TypeScript and JavaScript runtime built with robust security primitives.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">uv by Astral</h3>
+                        <span class="tool-cat cat-py">Python</span>
+                    </div>
+                    <p class="tool-desc">An extremely fast Python package and project manager, written in Rust.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Rustup</h3>
+                        <span class="tool-cat cat-rust">Rust</span>
+                    </div>
+                    <p class="tool-desc">The official toolchain installer for the Rust programming language.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">WinUtil</h3>
+                        <span class="tool-cat cat-sys">System</span>
+                    </div>
+                    <p class="tool-desc">In-depth Windows optimization GUI by Chris Titus Tech (debloat, tweaks, installs).</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Oh My Posh</h3>
+                        <span class="tool-cat cat-shell">Shell / UX</span>
+                    </div>
+                    <p class="tool-desc">Custom prompt engine for any shell. Over 200 themes with Nerd Font integration.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">InstallOffice Tool</h3>
+                        <span class="tool-cat cat-sys">System</span>
+                    </div>
+                    <p class="tool-desc">Official Microsoft Office Installation Tool. Install MS Office apps via CLI.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">Win11Debloat</h3>
+                        <span class="tool-cat cat-sys">System</span>
+                    </div>
+                    <p class="tool-desc">Remove bloatware, disable telemetry, and customize your Windows experience quickly.</p>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-header">
+                        <h3 class="tool-name">WinGet-CLI</h3>
+                        <span class="tool-cat cat-sys">System</span>
+                    </div>
+                    <p class="tool-desc">Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.</p>
+                </article>
+            </div>
+            <p class="tools-footer">... and a curated selection of advanced Dev Tools and Media managers.</p>
+        </section>
+    </main>
+
+    <footer>
+        <nav aria-label="Footer navigation">
+            <a href="https://github.com/MYMDO/irmhub" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+            <span class="divider">•</span>
+            <span>MIT License</span>
+            <span class="divider">•</span>
+            <a href="https://github.com/MYMDO/irmhub/issues" target="_blank" rel="noopener noreferrer">Submit a Tool</a>
+        </nav>
+        <p class="disclaimer">Not affiliated with the respective owners of the listed tools. Use at your own risk.</p>
+    </footer>
+
+    <script>
+        const ICONS = {
+            copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+            check: '<polyline points="20 6 9 17 4 12"/>'
+        };
+
+        function copyCommand(event) {
+            if (event && event.stopPropagation) {
+                event.stopPropagation();
+            }
+
+            const commandEl = document.getElementById('install-cmd');
+            const button = document.querySelector('.copy-btn');
+            const btnText = button.querySelector('.btn-text');
+            const icon = button.querySelector('.copy-icon');
+            
+            if (!commandEl || !button) return;
+
+            const command = commandEl.textContent;
+
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                fallbackCopy(command);
+                return;
+            }
+
+            navigator.clipboard.writeText(command)
+                .then(() => showCopySuccess(button, btnText, icon))
+                .catch(() => fallbackCopy(command));
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showCopySuccess(button, btnText, icon) {
+            button.classList.add('copied');
             btnText.textContent = 'Copied!';
-            icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+            icon.innerHTML = ICONS.check;
             
-            // Revert state
-            setTimeout(() => { 
-                btn.classList.remove('copied');
+            setTimeout(() => {
+                button.classList.remove('copied');
                 btnText.textContent = 'Copy';
-                icon.innerHTML = '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
+                icon.innerHTML = ICONS.copy;
             }, 2500);
-        }).catch(err => {
-            console.error('Failed to copy command: ', err);
-        });
-    }
-</script>
+        }
+
+        function handleKeydown(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                copyCommand();
+            }
+        }
+    </script>
 </body>
 </html>

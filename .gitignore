@@ -1,0 +1,51 @@
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# PowerShell
+*.log
+*.ps1~
+*.psess
+*.pssc
+*.psrc
+
+# Downloads
+*.exe
+*.msi
+*.zip
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Editor
+*.bak
+*.orig
+
+# Git
+.git/
+!.git/COMMIT_EDITMSG
+
+# CI/CD
+.github/
+*.yml
+*.yaml
+
+# Documentation build
+site/
+docs/_build/
+
+# Rustup
+rustup-init.exe
