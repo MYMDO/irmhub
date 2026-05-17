@@ -104,16 +104,20 @@ Initialize-ConsoleTerminal
 $script:ESC = [char]27
 $script:COLORS_ENABLED = -not $NoColor
 
-$script:ANSI = if ($script:COLORS_ENABLED) @{ 
-    Reset = "$script:ESC[0m"; Bold = "$script:ESC[1m"; Dim = "$script:ESC[2m"
-    Red = "$script:ESC[31m"; Green = "$script:ESC[32m"; Yellow = "$script:ESC[33m"
-    Blue = "$script:ESC[34m"; Magenta = "$script:ESC[35m"; Cyan = "$script:ESC[36m"
-    White = "$script:ESC[37m"; BrightBlack = "$script:ESC[90m"
-} else { 
-    Reset = ''; Bold = ''; Dim = ''
-    Red = ''; Green = ''; Yellow = ''
-    Blue = ''; Magenta = ''; Cyan = ''
-    White = ''; BrightBlack = ''
+if ($script:COLORS_ENABLED) {
+    $script:ANSI = @{ 
+        Reset = "$script:ESC[0m"; Bold = "$script:ESC[1m"; Dim = "$script:ESC[2m"
+        Red = "$script:ESC[31m"; Green = "$script:ESC[32m"; Yellow = "$script:ESC[33m"
+        Blue = "$script:ESC[34m"; Magenta = "$script:ESC[35m"; Cyan = "$script:ESC[36m"
+        White = "$script:ESC[37m"; BrightBlack = "$script:ESC[90m"
+    }
+} else {
+    $script:ANSI = @{ 
+        Reset = ''; Bold = ''; Dim = ''
+        Red = ''; Green = ''; Yellow = ''
+        Blue = ''; Magenta = ''; Cyan = ''
+        White = ''; BrightBlack = ''
+    }
 }
 
 $script:WIDTH = Get-ConsoleWidth
@@ -139,7 +143,7 @@ $script:CATALOG = @(
     [PSCustomObject]@{ Id=16; Name='Datatools (Caltech)';    Cat='Dev Tools';       Icon='[DEV]'; Admin=$false; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                  GitHub='https://github.com/caltechlibrary/datatools';              Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.' }
     [PSCustomObject]@{ Id=17; Name='InstallOffice Tool';     Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://setup.installoffice.org | iex';                                                                                                  GitHub='https://github.com/installoffice/setup';                   Desc='Official Microsoft Office Installation Tool. Install/Remove MS Office apps.' }
     [PSCustomObject]@{ Id=18; Name='Win11Debloat (Raphire)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://debloat.raphi.re/ | iex';                                                                                                  GitHub='https://github.com/Raphire/Win11Debloat';                  Desc='Remove bloatware, telemetry, and declutter Windows 10/11 quickly.' }
-    [PSCustomObject]@{ Id=19; Name='WinGet-CLI (LTSC/LTSB)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm winget.pro | iex';                                                                                                              GitHub='https://github.com/asheroto/winget-install';              Desc='Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.' }
+    [PSCustomObject]@{ Id=19; Name='WinGet-CLI (LTSC/LTSB)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://winget.pro | iex';                                                                                                              GitHub='https://github.com/asheroto/winget-install';              Desc='Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.' }
 )
 #endregion
 
@@ -177,13 +181,13 @@ function Format-Color {
         [string]$ColorCode,
         [switch]$Bold
     )
-    $fontWeight = if ($Bold) { $script:ANSI.Bold } else { '' }
-    return "$fontWeight$($script:ANSI[$ColorCode])$Text$($script:ANSI.Reset)"
+    $fontWeight = if ($Bold) { $script:ANSI['Bold'] } else { '' }
+    return "$fontWeight$($script:ANSI[$ColorCode])$Text$($script:ANSI['Reset'])"
 }
 
 function Write-Divider {
     param([char]$Char = '-')
-    Write-Host ($Char * $script:WIDTH) -ForegroundColor DarkGray
+    Write-Host "$(Format-Color ($Char * $script:WIDTH) 'BrightBlack')"
 }
 
 function Test-AdministratorRights {
@@ -203,9 +207,7 @@ function Get-ConsoleWidth {
 }
 
 function Clear-Console {
-    if ($script:COLORS_ENABLED) {
-        Clear-Host
-    }
+    Clear-Host
 }
 
 function Get-ToolById {
@@ -385,10 +387,10 @@ function Show-AdminWarning {
 
 function Show-SearchUI {
     Show-Banner
-    $keyword = Read-Host " $(Format-Color 'Search Catalog' 'Cyan') (name / keyword / category)"
-    if ([string]::IsNullOrWhiteSpace($keyword)) { return $null }
+    $script:SEARCH_KEYWORD = Read-Host " $(Format-Color 'Search Catalog' 'Cyan') (name / keyword / category)"
+    if ([string]::IsNullOrWhiteSpace($script:SEARCH_KEYWORD)) { return $null }
     
-    $results = Search-Tools -Keyword $keyword
+    $results = Search-Tools -Keyword $script:SEARCH_KEYWORD
     return $results
 }
 #endregion
@@ -437,22 +439,32 @@ function Execute-ToolCommand {
     Write-Divider
     Write-Host ''
 
+    $execSuccess = $true
     try {
         $relaxedCmd = "Set-StrictMode -Off; `$ErrorActionPreference = 'Continue'; $($Tool.Cmd)"
         $sb = [scriptblock]::Create($relaxedCmd)
         & $sb
-        return $script:EXIT_CODES.Success
     } catch {
+        $execSuccess = $false
         Write-Host ''
         Write-Host " $(Format-Color '[ERROR]' 'Red' -Bold) Execution Framework Failed." -ForegroundColor Red
         Write-Host " Details: $($_.Exception.Message)" -ForegroundColor Red
-        return $script:EXIT_CODES.ExecutionFailed
     } finally {
         [Console]::ResetColor()
         Write-Host ''
         Write-Divider
-        Write-Host " $(Format-Color 'Task Complete.' 'Green') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+        if ($execSuccess) {
+            Write-Host " $(Format-Color 'Task Complete.' 'Green') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+        } else {
+            Write-Host " $(Format-Color 'Task Failed.' 'Red') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+        }
         $null = $Host.UI.ReadLine()
+    }
+
+    if ($execSuccess) {
+        return $script:EXIT_CODES.Success
+    } else {
+        return $script:EXIT_CODES.ExecutionFailed
     }
 }
 #endregion
@@ -477,7 +489,7 @@ function Start-InteractiveMode {
                     $results = Show-SearchUI
                     if ($null -ne $results -and @($results).Length -gt 0) {
                         Show-Banner
-                        Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $keyword 'Cyan' -Bold)  $(Format-Color "($(@($results).Length) found)" 'BrightBlack')"
+                        Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $script:SEARCH_KEYWORD 'Cyan' -Bold)  $(Format-Color "($(@($results).Length) found)" 'BrightBlack')"
                         Write-Host ''
                         Show-ToolList -Tools $results
                         Prompt-ToolSelection -Tools $results
