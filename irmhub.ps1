@@ -125,7 +125,7 @@ function Format-Color {
 }
 
 function Write-Divider {
-    param([char]$Char = '-')
+    param([string]$Char = '-')
     Write-Host "$(Format-Color ($Char * $script:WIDTH) 'BrightBlack')"
 }
 
