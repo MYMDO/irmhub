@@ -50,13 +50,13 @@ Before submitting a PR:
 
 ```powershell
 # Verify script loads without errors
-. .\irmhub.ps1 -List -NoColor
+pwsh -File irmhub.ps1 -List -NoColor
 
 # Test search functionality
-. .\irmhub.ps1 -Search "python" -NoColor
+pwsh -File irmhub.ps1 -Search "python" -NoColor
 
 # Test category filter
-. .\irmhub.ps1 -Category "JavaScript" -NoColor
+pwsh -File irmhub.ps1 -Category "JavaScript" -NoColor
 ```
 
 ### 4. Documentation

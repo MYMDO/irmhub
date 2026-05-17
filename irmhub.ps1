@@ -145,10 +145,6 @@ function Get-ConsoleWidth {
     return 78
 }
 
-function Clear-Console {
-    Clear-Host
-}
-
 function Get-ToolById {
     param([int]$Id)
     return $script:CATALOG | Where-Object { $_.Id -eq $Id } | Select-Object -First 1
@@ -251,7 +247,7 @@ $script:CATALOG = @(
 #region UI Components
 function Show-Banner {
     param([switch]$NoClear)
-    if (-not $NoClear) { Clear-Console }
+    if (-not $NoClear) { Clear-Host }
     $asciiLogo = @(
         '  ██╗██████╗ ███╗   ███╗    ██╗  ██╗██╗   ██╗██████╗ ',
         '  ██║██╔══██╗████╗ ████║    ██║  ██║██║   ██║██╔══██╗',
@@ -403,7 +399,7 @@ function Invoke-ToolExecution {
     Show-ToolDetails -Tool $Tool
     
     if ($Tool.Admin -and -not (Test-AdministratorRights)) {
-        Show-AdminWarning -NonInteractive:$AutoConfirm
+        Show-AdminWarning -NonInteractive:$NonInteractive
         return $script:EXIT_CODES.AdminRequired
     }
 

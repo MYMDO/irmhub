@@ -79,7 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Config file support for custom tools
 - [ ] JSON/YAML catalog import
 - [ ] Tool update notifications
-- [ ] Installation statistics (anonymous)
 
 ---
 

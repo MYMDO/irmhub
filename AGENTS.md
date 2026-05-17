@@ -2,7 +2,7 @@
 
 ## Project Facts
 
-- **Single-file PowerShell TUI** — `irmhub.ps1` (641 lines), Windows only
+- **Single-file PowerShell TUI** — `irmhub.ps1` (637 lines), Windows only
 - **No build system, no tests, no CI** — manual testing only
 - **Zero external dependencies** — pure PowerShell 5.1+
 - **GitHub Pages** — `index.html` is the landing page
