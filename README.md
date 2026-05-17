@@ -179,7 +179,7 @@ Edit `$script:CATALOG` in `irmhub.ps1`. Each entry:
 
 ```
 irmhub/
-├── irmhub.ps1     # Main application (~622 lines)
+├── irmhub.ps1     # Main application (~628 lines)
 ├── index.html     # GitHub Pages landing page
 ├── README.md      # This file
 ├── AGENTS.md      # AI agent instructions
