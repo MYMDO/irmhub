@@ -208,7 +208,7 @@ $script:COLORS_ENABLED = -not $NoColor
 if ($script:COLORS_ENABLED) {
     $script:ANSI = @{ 
         Reset = "$script:ESC[0m"; Bold = "$script:ESC[1m"; Dim = "$script:ESC[2m"
-        Red = "$script:ESC[31m"; Green = "$script:ESC[32m"]; Yellow = "$script:ESC[33m"
+        Red = "$script:ESC[31m"; Green = "$script:ESC[32m"; Yellow = "$script:ESC[33m"
         Blue = "$script:ESC[34m"; Magenta = "$script:ESC[35m"; Cyan = "$script:ESC[36m"
         White = "$script:ESC[37m"; BrightBlack = "$script:ESC[90m"
     }
