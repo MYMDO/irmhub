@@ -462,6 +462,7 @@ function Execute-ToolCommand {
 
 #region Interactive Mode
 function Start-InteractiveMode {
+    Set-StrictMode -Off
     try {
         while ($true) {
             Show-Banner
@@ -607,14 +608,20 @@ function Start-NonInteractiveMode {
 
 #region Main Entry Point
 function Main {
-    if ($List -or -not [string]::IsNullOrWhiteSpace($Search) -or $Run -gt 0 -or -not [string]::IsNullOrWhiteSpace($Category) -or $Version -or $Update) {
-        $exitCode = Start-NonInteractiveMode
-        if ($null -ne $exitCode) {
-            exit $exitCode
+    try {
+        if ($List -or -not [string]::IsNullOrWhiteSpace($Search) -or $Run -gt 0 -or -not [string]::IsNullOrWhiteSpace($Category) -or $Version -or $Update) {
+            $exitCode = Start-NonInteractiveMode
+            if ($null -ne $exitCode) {
+                exit $exitCode
+            }
         }
+        
+        $null = Start-InteractiveMode
+    } catch {
+        Write-Host "`n[FATAL] $($_.Exception.GetType().Name): $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Press Enter to exit..."
+        $null = $Host.UI.ReadLine()
     }
-    
-    $null = Start-InteractiveMode
 }
 
 Main
