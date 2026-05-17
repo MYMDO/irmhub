@@ -2,7 +2,7 @@
 
 ## Project Facts
 
-- **Single-file PowerShell TUI** — `irmhub.ps1` (628 lines), Windows only
+- **Single-file PowerShell TUI** — `irmhub.ps1` (641 lines), Windows only
 - **No build system, no tests, no CI** — manual testing only
 - **Zero external dependencies** — pure PowerShell 5.1+
 - **GitHub Pages** — `index.html` is the landing page
@@ -67,7 +67,6 @@ Edit `$script:CATALOG` in the Catalog region. Each entry:
 - **Commits:** `type: description` (feat:, fix:, refactor:, docs:)
 - **Branches:** `feature/tool-name`
 - **gitignore:** excludes `.github/`, `*.yml`, `*.yaml` — do not add CI files to this repo
-- **CONTRIBUTING.md is stale** — it recommends `[CmdletBinding()]` and `param()` at script level, which contradicts the `irm | iex` requirement. Do not follow that advice for script-level code.
 
 ## Verification
 
