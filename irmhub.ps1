@@ -45,31 +45,14 @@
     https://github.com/MYMDO/irmhub/releases
 #>
 
-[CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
     [switch]$List,
-    
-    [Parameter(Mandatory = $false)]
     [string]$Search,
-    
-    [Parameter(Mandatory = $false)]
-    [ValidateRange(0, 999)]
     [int]$Run = 0,
-    
-    [Parameter(Mandatory = $false)]
     [string]$Category,
-    
-    [Parameter(Mandatory = $false)]
     [switch]$AutoConfirm,
-    
-    [Parameter(Mandatory = $false)]
     [switch]$NoColor,
-    
-    [Parameter(Mandatory = $false)]
     [switch]$Version,
-    
-    [Parameter(Mandatory = $false)]
     [switch]$Update
 )
 
