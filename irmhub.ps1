@@ -54,8 +54,8 @@ param(
     [string]$Search,
     
     [Parameter(Mandatory = $false)]
-    [ValidateRange(1, 999)]
-    [int]$Run,
+    [ValidateRange(0, 999)]
+    [int]$Run = 0,
     
     [Parameter(Mandatory = $false)]
     [string]$Category,
