@@ -2,7 +2,7 @@
 
 ## Project Facts
 
-- **Single-file PowerShell TUI** — `irmhub.ps1` (619 lines), Windows only
+- **Single-file PowerShell TUI** — `irmhub.ps1` (622 lines), Windows only
 - **No build system, no tests, no CI** — manual testing only
 - **Zero external dependencies** — pure PowerShell 5.1+
 - **GitHub Pages** — `index.html` is the landing page
@@ -23,9 +23,9 @@ pwsh -File irmhub.ps1 -Run 6 -AutoConfirm
 
 ## Architecture
 
-`irmhub.ps1` uses `#region` blocks in this order: Constants → Bootstrap → State/UI Config → Catalog → Helpers → UI → Execution → Interactive Mode → Non-Interactive Mode → Main.
+`irmhub.ps1` uses `#region` blocks in this order: Constants → Helpers → Bootstrap → State/UI Config → Catalog → UI → Execution → Interactive Mode → Non-Interactive Mode → Main.
 
-**Key quirk:** `Initialize-SecurityProtocol` and `Initialize-ConsoleTerminal` are called at lines 99-100 but defined later in the Helpers region. PowerShell parses the entire file before execution so this works.
+**Key quirk:** All functions must be defined BEFORE they are called. With `Invoke-Expression` (the `irm | iex` pattern), PowerShell 5.1 does not support forward-referencing functions. So Helpers region comes before Bootstrap. This differs from normal .ps1 file execution where forward references work.
 
 **Entry point:** `Main` function at the bottom routes to `Start-InteractiveMode` (default) or `Start-NonInteractiveMode` (when any CLI flag is set).
 

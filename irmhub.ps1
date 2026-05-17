@@ -86,58 +86,6 @@ $script:EXIT_CODES = @{
 }
 #endregion
 
-#region Bootstrap & Security
-Initialize-SecurityProtocol
-Initialize-ConsoleTerminal
-#endregion
-
-#region State & UI Configuration
-$script:ESC = [char]27
-$script:COLORS_ENABLED = -not $NoColor
-
-if ($script:COLORS_ENABLED) {
-    $script:ANSI = @{ 
-        Reset = "$script:ESC[0m"; Bold = "$script:ESC[1m"; Dim = "$script:ESC[2m"
-        Red = "$script:ESC[31m"; Green = "$script:ESC[32m"; Yellow = "$script:ESC[33m"
-        Blue = "$script:ESC[34m"; Magenta = "$script:ESC[35m"; Cyan = "$script:ESC[36m"
-        White = "$script:ESC[37m"; BrightBlack = "$script:ESC[90m"
-    }
-} else {
-    $script:ANSI = @{ 
-        Reset = ''; Bold = ''; Dim = ''
-        Red = ''; Green = ''; Yellow = ''
-        Blue = ''; Magenta = ''; Cyan = ''
-        White = ''; BrightBlack = ''
-    }
-}
-
-$script:WIDTH = Get-ConsoleWidth
-#endregion
-
-#region Tool Catalog
-$script:CATALOG = @(
-    [PSCustomObject]@{ Id=1;  Name='Scoop';                  Cat='Package Manager'; Icon='[PKG]'; Admin=$false; Cmd='irm https://get.scoop.sh | iex';                                                                                                           GitHub='https://github.com/ScoopInstaller/Scoop';                  Desc='Package manager for Windows. No admin needed. User-space installs.' }
-    [PSCustomObject]@{ Id=2;  Name='Chocolatey';             Cat='Package Manager'; Icon='[PKG]'; Admin=$true;  Cmd='Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))';  GitHub='https://github.com/chocolatey/choco';                       Desc='Largest Windows package repo. 10k+ packages. Enterprise-grade.' }
-    [PSCustomObject]@{ Id=3;  Name='Bun';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://bun.sh/install.ps1 | iex';                                                                                                          GitHub='https://github.com/oven-sh/bun';                           Desc='All-in-one JS runtime, bundler, test runner and package manager.' }
-    [PSCustomObject]@{ Id=4;  Name='Deno';                   Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://deno.land/install.ps1 | iex';                                                                                                 GitHub='https://github.com/denoland/deno';                         Desc='Secure TypeScript/JS runtime by Node.js creators. Built-in TS.' }
-    [PSCustomObject]@{ Id=5;  Name='fnm';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://fnm.vercel.app/install | iex';                                                                                                GitHub='https://github.com/Schniz/fnm';                            Desc='Fast Node Version Manager written in Rust. Replaces nvm on Windows.' }
-    [PSCustomObject]@{ Id=6;  Name='uv';                     Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://astral.sh/uv/install.ps1 | iex';                                                                                              GitHub='https://github.com/astral-sh/uv';                          Desc='Ultra-fast Python package and project manager by Astral (Rust).' }
-    [PSCustomObject]@{ Id=7;  Name='Rye';                    Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                             GitHub='https://github.com/astral-sh/rye';                         Desc='Holistic Python project and environment manager. Handles venvs.' }
-    [PSCustomObject]@{ Id=8;  Name='Rustup';                 Cat='Rust';            Icon='[RS] '; Admin=$false; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                    GitHub='https://github.com/rust-lang/rustup';                      Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.' }
-    [PSCustomObject]@{ Id=9;  Name='WinUtil (Chris Titus)';  Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://christitus.com/win | iex';                                                                                                  GitHub='https://github.com/ChrisTitusTech/winutil';                Desc='All-in-one Windows debloat, tweaks, software install GUI.' }
-    [PSCustomObject]@{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                   GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.' }
-    [PSCustomObject]@{ Id=11; Name='PowerShell 7';           Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                              GitHub='https://github.com/PowerShell/PowerShell';                 Desc='Official Microsoft installer for PowerShell 7 (cross-platform).' }
-    [PSCustomObject]@{ Id=12; Name='Oh My Posh';             Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.' }
-    [PSCustomObject]@{ Id=13; Name='Terminal-Icons';         Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                      GitHub='https://github.com/devblackops/Terminal-Icons';            Desc='PowerShell module to show file and folder icons in the terminal.' }
-    [PSCustomObject]@{ Id=14; Name='Spicetify CLI';          Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex';                                                                             GitHub='https://github.com/spicetify/cli';                         Desc='Customize the Spotify desktop client with themes and extensions.' }
-    [PSCustomObject]@{ Id=15; Name='Spicetify Marketplace';  Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex';                                                                    GitHub='https://github.com/spicetify/marketplace';                 Desc='In-app marketplace for Spicetify themes and extensions.' }
-    [PSCustomObject]@{ Id=16; Name='Datatools (Caltech)';    Cat='Dev Tools';       Icon='[DEV]'; Admin=$false; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                  GitHub='https://github.com/caltechlibrary/datatools';              Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.' }
-    [PSCustomObject]@{ Id=17; Name='InstallOffice Tool';     Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://setup.installoffice.org | iex';                                                                                                  GitHub='https://github.com/installoffice/setup';                   Desc='Official Microsoft Office Installation Tool. Install/Remove MS Office apps.' }
-    [PSCustomObject]@{ Id=18; Name='Win11Debloat (Raphire)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://debloat.raphi.re/ | iex';                                                                                                  GitHub='https://github.com/Raphire/Win11Debloat';                  Desc='Remove bloatware, telemetry, and declutter Windows 10/11 quickly.' }
-    [PSCustomObject]@{ Id=19; Name='WinGet-CLI (LTSC/LTSB)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://winget.pro | iex';                                                                                                              GitHub='https://github.com/asheroto/winget-install';              Desc='Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.' }
-)
-#endregion
-
 #region Helper Functions
 function Initialize-SecurityProtocol {
     try {
@@ -246,6 +194,58 @@ function Test-NetworkConnectivity {
         return $false
     }
 }
+#endregion
+
+#region Bootstrap & Security
+Initialize-SecurityProtocol
+Initialize-ConsoleTerminal
+#endregion
+
+#region State & UI Configuration
+$script:ESC = [char]27
+$script:COLORS_ENABLED = -not $NoColor
+
+if ($script:COLORS_ENABLED) {
+    $script:ANSI = @{ 
+        Reset = "$script:ESC[0m"; Bold = "$script:ESC[1m"; Dim = "$script:ESC[2m"
+        Red = "$script:ESC[31m"; Green = "$script:ESC[32m"]; Yellow = "$script:ESC[33m"
+        Blue = "$script:ESC[34m"; Magenta = "$script:ESC[35m"; Cyan = "$script:ESC[36m"
+        White = "$script:ESC[37m"; BrightBlack = "$script:ESC[90m"
+    }
+} else {
+    $script:ANSI = @{ 
+        Reset = ''; Bold = ''; Dim = ''
+        Red = ''; Green = ''; Yellow = ''
+        Blue = ''; Magenta = ''; Cyan = ''
+        White = ''; BrightBlack = ''
+    }
+}
+
+$script:WIDTH = Get-ConsoleWidth
+#endregion
+
+#region Tool Catalog
+$script:CATALOG = @(
+    [PSCustomObject]@{ Id=1;  Name='Scoop';                  Cat='Package Manager'; Icon='[PKG]'; Admin=$false; Cmd='irm https://get.scoop.sh | iex';                                                                                                           GitHub='https://github.com/ScoopInstaller/Scoop';                  Desc='Package manager for Windows. No admin needed. User-space installs.' }
+    [PSCustomObject]@{ Id=2;  Name='Chocolatey';             Cat='Package Manager'; Icon='[PKG]'; Admin=$true;  Cmd='Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1''))';  GitHub='https://github.com/chocolatey/choco';                       Desc='Largest Windows package repo. 10k+ packages. Enterprise-grade.' }
+    [PSCustomObject]@{ Id=3;  Name='Bun';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://bun.sh/install.ps1 | iex';                                                                                                          GitHub='https://github.com/oven-sh/bun';                           Desc='All-in-one JS runtime, bundler, test runner and package manager.' }
+    [PSCustomObject]@{ Id=4;  Name='Deno';                   Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://deno.land/install.ps1 | iex';                                                                                                 GitHub='https://github.com/denoland/deno';                         Desc='Secure TypeScript/JS runtime by Node.js creators. Built-in TS.' }
+    [PSCustomObject]@{ Id=5;  Name='fnm';                    Cat='JavaScript';      Icon='[JS] '; Admin=$false; Cmd='irm https://fnm.vercel.app/install | iex';                                                                                                GitHub='https://github.com/Schniz/fnm';                            Desc='Fast Node Version Manager written in Rust. Replaces nvm on Windows.' }
+    [PSCustomObject]@{ Id=6;  Name='uv';                     Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://astral.sh/uv/install.ps1 | iex';                                                                                              GitHub='https://github.com/astral-sh/uv';                          Desc='Ultra-fast Python package and project manager by Astral (Rust).' }
+    [PSCustomObject]@{ Id=7;  Name='Rye';                    Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                             GitHub='https://github.com/astral-sh/rye';                         Desc='Holistic Python project and environment manager. Handles venvs.' }
+    [PSCustomObject]@{ Id=8;  Name='Rustup';                 Cat='Rust';            Icon='[RS] '; Admin=$false; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                    GitHub='https://github.com/rust-lang/rustup';                      Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.' }
+    [PSCustomObject]@{ Id=9;  Name='WinUtil (Chris Titus)';  Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://christitus.com/win | iex';                                                                                                  GitHub='https://github.com/ChrisTitusTech/winutil';                Desc='All-in-one Windows debloat, tweaks, software install GUI.' }
+    [PSCustomObject]@{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                   GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.' }
+    [PSCustomObject]@{ Id=11; Name='PowerShell 7';           Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                              GitHub='https://github.com/PowerShell/PowerShell';                 Desc='Official Microsoft installer for PowerShell 7 (cross-platform).' }
+    [PSCustomObject]@{ Id=12; Name='Oh My Posh';             Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.' }
+    [PSCustomObject]@{ Id=13; Name='Terminal-Icons';         Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                      GitHub='https://github.com/devblackops/Terminal-Icons';            Desc='PowerShell module to show file and folder icons in the terminal.' }
+    [PSCustomObject]@{ Id=14; Name='Spicetify CLI';          Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex';                                                                             GitHub='https://github.com/spicetify/cli';                         Desc='Customize the Spotify desktop client with themes and extensions.' }
+    [PSCustomObject]@{ Id=15; Name='Spicetify Marketplace';  Cat='Media';           Icon='[MED]'; Admin=$false; Cmd='iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex';                                                                    GitHub='https://github.com/spicetify/marketplace';                 Desc='In-app marketplace for Spicetify themes and extensions.' }
+    [PSCustomObject]@{ Id=16; Name='Datatools (Caltech)';    Cat='Dev Tools';       Icon='[DEV]'; Admin=$false; Cmd='irm https://caltechlibrary.github.io/datatools/installer.ps1 | iex';                                                                                  GitHub='https://github.com/caltechlibrary/datatools';              Desc='CLI tools for JSON, CSV, XLSX and DSV data processing.' }
+    [PSCustomObject]@{ Id=17; Name='InstallOffice Tool';     Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://setup.installoffice.org | iex';                                                                                                  GitHub='https://github.com/installoffice/setup';                   Desc='Official Microsoft Office Installation Tool. Install/Remove MS Office apps.' }
+    [PSCustomObject]@{ Id=18; Name='Win11Debloat (Raphire)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://debloat.raphi.re/ | iex';                                                                                                  GitHub='https://github.com/Raphire/Win11Debloat';                  Desc='Remove bloatware, telemetry, and declutter Windows 10/11 quickly.' }
+    [PSCustomObject]@{ Id=19; Name='WinGet-CLI (LTSC/LTSB)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://winget.pro | iex';                                                                                                              GitHub='https://github.com/asheroto/winget-install';              Desc='Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.' }
+)
 #endregion
 
 #region UI Components
