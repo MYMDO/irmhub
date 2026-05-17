@@ -614,8 +614,7 @@ function Main {
         }
     }
     
-    $exitCode = Start-InteractiveMode
-    exit $exitCode
+    $null = Start-InteractiveMode
 }
 
 Main
