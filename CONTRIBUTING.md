@@ -39,8 +39,8 @@ Description: [Brief description of the tool]
 
 - Follow PowerShell best practices
 - Use `#Requires -Version 5.1` for compatibility
-- Use `[CmdletBinding()]` for functions with parameters
-- Use `param()` block for script-level parameters
+- **Do NOT** use `[CmdletBinding()]` or `param()` at the **script level** — they break `irm | iex` in PowerShell 5.1. Use manual `$args` parsing instead (see example in `irmhub.ps1`).
+- Use `[CmdletBinding()]` and `[Parameter()]` inside **functions** freely — the restriction is only at script level
 - Use descriptive function names with Verb-Noun pattern
 - Comment complex logic but avoid obvious comments
 

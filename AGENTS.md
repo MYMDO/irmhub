@@ -50,6 +50,8 @@ Edit `$script:CATALOG` in the Catalog region. Each entry:
 
 ## Critical Gotchas
 
+- **PowerShell variable names are case-insensitive.** `$script:VERSION = '1.0.0'` **overwrites** `$Version = $false` because PowerShell treats `VERSION` and `Version` as the same variable. This was the root cause of the `irm | iex` window closing bug — `$Version` became the truthy string `'1.0.0'`, causing the `-Version` branch to always be entered, calling `exit`. Always use distinct names: `$script:SCRIPT_VERSION` not `$script:VERSION`.
+
 - **Confirmation is case-sensitive.** The check uses `-ceq 'YES'` (not `-eq`). User must type exactly `YES` in uppercase.
 - **`[CmdletBinding()]` and `param()` break `irm | iex` in PS 5.1.** The script must NOT have `[CmdletBinding()]` or a `param()` block at the top level — they cause MetadataErrors when executed via `Invoke-Expression` (the `| iex` pattern). Parameters are parsed manually from `$args` instead. Functions WITHIN the script CAN use `[CmdletBinding()]` or `[Parameter()]` — the restriction is only at script level.
 - **`Set-StrictMode -Version 2.0` interacts badly with `iex` in PS 5.1.** `[char] * [int]` throws "operation not defined". `Write-Divider` uses `[string]` not `[char]`. `Start-InteractiveMode` calls `Set-StrictMode -Off` to avoid this during UI rendering.

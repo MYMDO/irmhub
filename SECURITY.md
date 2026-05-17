@@ -48,7 +48,7 @@ Before any tool executes, IRMHUB displays:
 
 ### User Consent
 
-- Requires typing `YES` (exact match, case-insensitive)
+- Requires typing `YES` (exact match, case-sensitive)
 - No shortcuts or abbreviations accepted
 - Cancel by pressing Enter or typing anything else
 

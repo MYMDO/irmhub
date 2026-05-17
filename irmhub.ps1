@@ -68,7 +68,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 #region Constants
-$script:VERSION = '1.0.0'
+$script:SCRIPT_VERSION = '1.0.0'
 $script:AUTHOR = 'MYMDO'
 $script:REPO_URL = 'https://github.com/MYMDO/irmhub'
 $script:RAW_URL = 'https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1'
@@ -250,7 +250,8 @@ $script:CATALOG = @(
 
 #region UI Components
 function Show-Banner {
-    Clear-Console
+    param([switch]$NoClear)
+    if (-not $NoClear) { Clear-Console }
     $asciiLogo = @(
         '  ██╗██████╗ ███╗   ███╗    ██╗  ██╗██╗   ██╗██████╗ ',
         '  ██║██╔══██╗████╗ ████║    ██║  ██║██║   ██║██╔══██╗',
@@ -368,12 +369,15 @@ function Show-SecurityChecklist {
 }
 
 function Show-AdminWarning {
+    param([switch]$NonInteractive)
     Write-Host ''
     Write-Host " $(Format-Color '[!] WARNING:' 'Red' -Bold) This tool requires Administrator privileges." -ForegroundColor Red
     Write-Host "     Restart PowerShell as Administrator and run IRMHUB again." -ForegroundColor Red
     Write-Host ''
-    Write-Host " Press $(Format-Color 'Enter' 'Yellow') to go back..." -NoNewline
-    $null = $Host.UI.ReadLine()
+    if (-not $NonInteractive) {
+        Write-Host " Press $(Format-Color 'Enter' 'Yellow') to go back..." -NoNewline
+        $null = $Host.UI.ReadLine()
+    }
 }
 
 function Show-SearchUI {
@@ -391,19 +395,20 @@ function Invoke-ToolExecution {
     param(
         [Parameter(Mandatory = $true)]
         [PSCustomObject]$Tool,
-        [switch]$SkipConfirmation
+        [switch]$SkipConfirmation,
+        [switch]$NonInteractive
     )
     
     Show-Banner
     Show-ToolDetails -Tool $Tool
     
     if ($Tool.Admin -and -not (Test-AdministratorRights)) {
-        Show-AdminWarning
+        Show-AdminWarning -NonInteractive:$AutoConfirm
         return $script:EXIT_CODES.AdminRequired
     }
 
     if ($SkipConfirmation -or $AutoConfirm) {
-        return Execute-ToolCommand -Tool $Tool
+        return Execute-ToolCommand -Tool $Tool -NonInteractive:$NonInteractive
     }
 
     Show-SecurityChecklist -Tool $Tool
@@ -421,7 +426,10 @@ function Invoke-ToolExecution {
 }
 
 function Execute-ToolCommand {
-    param([PSCustomObject]$Tool)
+    param(
+        [PSCustomObject]$Tool,
+        [switch]$NonInteractive
+    )
     
     Write-Host ''
     Write-Divider
@@ -445,11 +453,16 @@ function Execute-ToolCommand {
         Write-Host ''
         Write-Divider
         if ($execSuccess) {
-            Write-Host " $(Format-Color 'Task Complete.' 'Green') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+            if (-not $NonInteractive) {
+                Write-Host " $(Format-Color 'Task Complete.' 'Green') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+                $null = $Host.UI.ReadLine()
+            }
         } else {
-            Write-Host " $(Format-Color 'Task Failed.' 'Red') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+            if (-not $NonInteractive) {
+                Write-Host " $(Format-Color 'Task Failed.' 'Red') Press $(Format-Color 'Enter' 'Yellow') to return to IRMHUB..." -NoNewline
+                $null = $Host.UI.ReadLine()
+            }
         }
-        $null = $Host.UI.ReadLine()
     }
 
     if ($execSuccess) {
@@ -533,7 +546,7 @@ function Prompt-ToolSelection {
 
 #region Non-Interactive Mode
 function Show-VersionInfo {
-    Write-Host "IRMHUB v$script:VERSION" -ForegroundColor Cyan
+    Write-Host "IRMHUB v$script:SCRIPT_VERSION" -ForegroundColor Cyan
     Write-Host "Author: $script:AUTHOR"
     Write-Host "Repository: $script:REPO_URL"
 }
@@ -551,18 +564,18 @@ function Start-NonInteractiveMode {
             return $script:EXIT_CODES.NetworkError
         }
         $latest = Get-LatestVersion
-        if ($null -ne $latest -and $latest -ne $script:VERSION) {
-            Write-Host "Update available: v$latest (current: v$script:VERSION)" -ForegroundColor Yellow
+        if ($null -ne $latest -and $latest -ne $script:SCRIPT_VERSION) {
+            Write-Host "Update available: v$latest (current: v$script:SCRIPT_VERSION)" -ForegroundColor Yellow
             Write-Host "Run: irm $script:RAW_URL | iex" -ForegroundColor Cyan
             return $script:EXIT_CODES.UpdateAvailable
         } else {
-            Write-Host "You are running the latest version: v$script:VERSION" -ForegroundColor Green
+            Write-Host "You are running the latest version: v$script:SCRIPT_VERSION" -ForegroundColor Green
             return $script:EXIT_CODES.Success
         }
     }
 
     if ($List) {
-        Show-Banner
+        Show-Banner -NoClear
         Write-Host " $(Format-Color 'AVAILABLE TOOLS' 'Cyan' -Bold)  $(Format-Color "($($script:CATALOG.Length) total)" 'BrightBlack')"
         Write-Host ''
         Show-ToolList -Tools $script:CATALOG
@@ -571,7 +584,7 @@ function Start-NonInteractiveMode {
 
     if (-not [string]::IsNullOrWhiteSpace($Search)) {
         $results = Search-Tools -Keyword $Search
-        Show-Banner
+        Show-Banner -NoClear
         Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $Search 'Cyan' -Bold)  $(Format-Color "($(@($results).Length) found)" 'BrightBlack')"
         Write-Host ''
         Show-ToolList -Tools $results
@@ -585,7 +598,7 @@ function Start-NonInteractiveMode {
             return $script:EXIT_CODES.ToolNotFound
         }
         Write-Host "Executing: $($tool.Name)..." -ForegroundColor Cyan
-        return Invoke-ToolExecution -Tool $tool -SkipConfirmation:$AutoConfirm
+        return Invoke-ToolExecution -Tool $tool -SkipConfirmation:$AutoConfirm -NonInteractive
     }
 
     if (-not [string]::IsNullOrWhiteSpace($Category)) {
@@ -595,7 +608,7 @@ function Start-NonInteractiveMode {
             Write-Host "Available categories: $((@('All') + ($script:CATALOG | Select-Object -ExpandProperty Cat -Unique | Sort-Object) | Where-Object { $_ -ne 'All' }) -join ', ')" -ForegroundColor Gray
             return $script:EXIT_CODES.Success
         }
-        Show-Banner
+        Show-Banner -NoClear
         Write-Host " $(Format-Color $Category.ToUpper() 'Cyan' -Bold)  $(Format-Color "($(@($tools).Length) tools)" 'BrightBlack')"
         Write-Host ''
         Show-ToolList -Tools $tools
