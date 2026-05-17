@@ -52,7 +52,7 @@ Edit `$script:CATALOG` in the Catalog region. Each entry:
 
 - **Confirmation is case-sensitive.** The check uses `-ceq 'YES'` (not `-eq`). User must type exactly `YES` in uppercase.
 - **Tools execute in a relaxed scope.** Commands are wrapped with `Set-StrictMode -Off; $ErrorActionPreference = 'Continue'` to prevent third-party scripts from breaking under the script's top-level strict mode.
-- **`[CmdletBinding()]` breaks `irm | iex` in PS 5.1.** The script must NOT have `[CmdletBinding()]` at the top level — it causes a MetadataError when executed via `Invoke-Expression` (the `| iex` pattern). Use a simple `param()` block instead.
+- **`[CmdletBinding()]` and `param()` break `irm | iex` in PS 5.1.** The script must NOT have `[CmdletBinding()]` or a `param()` block at the top level — they cause MetadataErrors when executed via `Invoke-Expression` (the `| iex` pattern). Parameters are parsed manually from `$args` instead.
 - **Exit codes matter.** Non-interactive mode returns exit codes (0=success, 1=cancel, 2=admin required, 3=not found, 4=exec failed, 5=network, 6=bad args, 7=update available).
 
 ## Conventions

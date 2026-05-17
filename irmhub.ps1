@@ -45,16 +45,24 @@
     https://github.com/MYMDO/irmhub/releases
 #>
 
-param(
-    [switch]$List,
-    [string]$Search,
-    [int]$Run = 0,
-    [string]$Category,
-    [switch]$AutoConfirm,
-    [switch]$NoColor,
-    [switch]$Version,
-    [switch]$Update
-)
+# Parse script-level parameters manually — avoids MetadataError with irm | iex in PS 5.1
+$List = $false; $Search = $null; [int]$Run = 0; $Category = $null
+$AutoConfirm = $false; $NoColor = $false; $Version = $false; $Update = $false
+
+$i = 0
+while ($i -lt $args.Count) {
+    switch ($args[$i]) {
+        '-List' { $List = $true }
+        '-Search' { $Search = $args[++$i] }
+        '-Run' { $Run = [int]$args[++$i] }
+        '-Category' { $Category = $args[++$i] }
+        '-AutoConfirm' { $AutoConfirm = $true }
+        '-NoColor' { $NoColor = $true }
+        '-Version' { $Version = $true }
+        '-Update' { $Update = $true }
+    }
+    $i++
+}
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
