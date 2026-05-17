@@ -130,9 +130,13 @@ function Write-Divider {
 }
 
 function Test-AdministratorRights {
-    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = [Security.Principal.WindowsPrincipal]$identity
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    try {
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $principal = [Security.Principal.WindowsPrincipal]$identity
+        return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    } catch {
+        return $false
+    }
 }
 
 function Get-ConsoleWidth {
@@ -155,7 +159,7 @@ function Get-ToolsByCategory {
     if ([string]::IsNullOrWhiteSpace($Category) -or $Category -eq 'All') {
         return $script:CATALOG
     }
-    return $script:CATALOG | Where-Object { $_.Cat -eq $Category }
+    return $script:CATALOG | Where-Object { $_.Cat -eq $Category -or $_.Cat -ieq $Category }
 }
 
 function Search-Tools {
@@ -291,8 +295,7 @@ function Show-CategoryList {
 function Show-ToolList {
     param(
         [Parameter(Mandatory = $true)]
-        [array]$Tools,
-        [string]$Header = 'CATALOG'
+        [array]$Tools
     )
     
     $count = @($Tools).Length
@@ -429,7 +432,7 @@ function Execute-ToolCommand {
     
     Write-Host ''
     Write-Divider
-    Write-Host " $(Format-Color '> Instantiating child runspace...' 'BrightBlack')"
+    Write-Host " $(Format-Color '> Preparing execution scope...' 'BrightBlack')"
     Write-Host " $(Format-Color '> Executing module deployment...' 'Green' -Bold)"
     Write-Divider
     Write-Host ''
@@ -494,6 +497,10 @@ function Start-InteractiveMode {
                         Write-Host ''
                         Show-ToolList -Tools $results
                         Prompt-ToolSelection -Tools $results
+                    } elseif (-not [string]::IsNullOrWhiteSpace($script:SEARCH_KEYWORD)) {
+                        Write-Host ''
+                        Write-Host " $(Format-Color 'No tools found for:' 'Yellow') $(Format-Color $script:SEARCH_KEYWORD 'Cyan')"
+                        Start-Sleep -Milliseconds 1200
                     }
                     continue
                 }
