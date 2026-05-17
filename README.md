@@ -7,44 +7,29 @@
 [![Zero Telemetry](https://img.shields.io/badge/Telemetry-None-success.svg)](#security-model)
 [![GitHub Release](https://img.shields.io/github/v/release/MYMDO/irmhub)](https://github.com/MYMDO/irmhub/releases)
 
-> *One command to rule them all.*  
+> *One command to rule them all.*
 > An interactive TUI that aggregates popular open-source utilities installable via `irm ... | iex` with full security transparency.
 
 ---
 
 ## Quick Start
 
-Open PowerShell (or Windows Terminal) and run:
-
 ```powershell
 irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | iex
 ```
 
-> **Security Note:** We strongly recommend inspecting the raw script at the URL above before execution, as is best practice for any `irm | iex` command.
+> **Security Note:** Inspect the raw script at the URL above before execution, as is best practice for any `irm | iex` command.
 
 ---
 
 ## Features
 
-### Core Features
-
-- **Centralized Catalog** — Organizes 19+ tools across 8 categories
+- **Centralized Catalog** — 19 tools across 8 categories
 - **Interactive TUI** — Menu-driven interface with ANSI color support
-- **Category Filtering** — Browse tools by Package Managers, JS, Python, Rust, System, Shell/UX, Media, Dev Tools
-- **Search Engine** — Quickly filter the catalog by name, keyword, or category
-- **CLI Mode** — Non-interactive usage for automation and scripting
-
-### Security Model
-
-| Guarantee | Implementation |
-|:----------|:---------------|
-| **TLS 1.2+** | `[Net.ServicePointManager]::SecurityProtocol` updated at startup |
-| **Command Preview** | Full command shown before any execution |
-| **Explicit Consent** | Requires typing `YES` to proceed |
-| **Elevation Check** | Warns if Admin rights are required |
-| **Zero Telemetry** | No external HTTP calls except selected tool |
-| **Isolated Scope** | `[scriptblock]::Create()` prevents scope pollution |
-| **HTTPS Only** | Catalog enforces `https://` for all URLs |
+- **Category Filtering** — Browse by Package Managers, JavaScript, Python, Rust, System, Shell/UX, Media, Dev Tools
+- **Search Engine** — Filter by name, keyword, or category
+- **CLI Mode** — Non-interactive automation and scripting
+- **Security First** — TLS 1.2+, HTTPS-only, command preview, explicit consent
 
 ---
 
@@ -69,8 +54,8 @@ irmhub.ps1
 | `-Search <term>` | Search tools | `irmhub.ps1 -Search python` |
 | `-Run <id>` | Execute tool by ID | `irmhub.ps1 -Run 6` |
 | `-Category <name>` | Filter by category | `irmhub.ps1 -Category JavaScript` |
-| `-AutoConfirm` | Skip confirmation | `irmhub.ps1 -Run 6 -AutoConfirm` |
-| `-NoColor` | Disable colors | `irmhub.ps1 -List -NoColor` |
+| `-AutoConfirm` | Skip confirmation (use with `-Run`) | `irmhub.ps1 -Run 6 -AutoConfirm` |
+| `-NoColor` | Disable ANSI colors | `irmhub.ps1 -List -NoColor` |
 | `-Version` | Show version | `irmhub.ps1 -Version` |
 | `-Update` | Check for updates | `irmhub.ps1 -Update` |
 
@@ -95,60 +80,60 @@ irmhub.ps1
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 1 | Scoop | No | Windows package manager. User-space installs. |
-| 2 | Chocolatey | Yes | Largest Windows package repo. Enterprise-grade. |
+| 1 | Scoop | No | User-space package manager |
+| 2 | Chocolatey | Yes | Enterprise-grade package repository |
 
 ### JavaScript
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 3 | Bun | No | All-in-one JS runtime, bundler, test runner. |
-| 4 | Deno | No | Secure TypeScript/JS runtime. Built-in TS support. |
-| 5 | fnm | No | Fast Node Version Manager written in Rust. |
+| 3 | Bun | No | All-in-one JS runtime, bundler, test runner |
+| 4 | Deno | No | Secure TypeScript/JS runtime |
+| 5 | fnm | No | Fast Node Version Manager (Rust) |
 
 ### Python
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 6 | uv | No | Ultra-fast Python package manager by Astral. |
-| 7 | Rye | No | Holistic Python project and environment manager. |
+| 6 | uv | No | Ultra-fast Python package manager (Rust) |
+| 7 | Rye | No | Holistic Python project manager |
 
 ### Rust
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 8 | Rustup | No | Official Rust toolchain installer. |
+| 8 | Rustup | No | Official Rust toolchain installer |
 
 ### System
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 9 | WinUtil | Yes | Windows debloat, tweaks, software install GUI. |
-| 10 | MAS | Yes | Windows/Office activator. HWID, KMS38, Online KMS. |
-| 11 | PowerShell 7 | Yes | Official Microsoft PowerShell 7 installer. |
-| 17 | InstallOffice | Yes | Microsoft Office CLI installation tool. |
-| 18 | Win11Debloat | Yes | Remove bloatware and telemetry. |
-| 19 | WinGet-CLI | Yes | Install WinGet on LTSC/LTSB/Server. |
+| 9 | WinUtil (Chris Titus) | Yes | All-in-one debloat, tweaks, software GUI |
+| 10 | MAS (Activation) | Yes | Windows/Office open-source activator |
+| 11 | PowerShell 7 | Yes | Official cross-platform PowerShell installer |
+| 17 | InstallOffice | Yes | Microsoft Office CLI installation tool |
+| 18 | Win11Debloat | Yes | Remove bloatware and telemetry |
+| 19 | WinGet-CLI | Yes | Install WinGet on LTSC/LTSB/Server |
 
 ### Shell / UX
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 12 | Oh My Posh | No | Custom prompt engine. 200+ themes. |
-| 13 | Terminal-Icons | No | File/folder icons for PowerShell. |
+| 12 | Oh My Posh | No | Custom prompt engine, 200+ themes |
+| 13 | Terminal-Icons | No | File/folder icons for PowerShell |
 
 ### Media
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 14 | Spicetify CLI | No | Customize Spotify with themes. |
-| 15 | Spicetify Marketplace | No | In-app marketplace for themes. |
+| 14 | Spicetify CLI | No | Customize Spotify desktop client |
+| 15 | Spicetify Marketplace | No | In-app theme and extension marketplace |
 
 ### Dev Tools
 
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
-| 16 | Datatools | No | CLI tools for JSON, CSV, XLSX processing. |
+| 16 | Datatools (Caltech) | No | CLI for JSON, CSV, XLSX processing |
 
 ---
 
@@ -160,33 +145,33 @@ irmhub.ps1
 | PowerShell | 5.1 | 7.x |
 | Network | Internet | Broadband |
 
+> **Note:** PowerShell 7 (cross-platform) is available in the catalog and can be installed via IRMHUB itself.
+
 ---
 
 ## Adding Custom Tools
 
-Edit `irmhub.ps1` and add an entry to `$script:CATALOG`:
+Edit `$script:CATALOG` in `irmhub.ps1`. Each entry:
 
 ```powershell
 [PSCustomObject]@{
-    Id    = 20
+    Id    = 20           # sequential, unique
     Name  = 'MyTool'
-    Cat   = 'Dev Tools'
-    Icon  = '[DEV]'
-    Admin = $false
+    Cat   = 'Dev Tools'  # must match existing category exactly
+    Icon  = '[DEV]'      # [PKG] [JS] [PY] [RS] [SYS] [UX] [MED] [DEV]
+    Admin = $false       # $true if elevation is required
     Cmd   = 'irm https://example.com/install.ps1 | iex'
     GitHub = 'https://github.com/org/repo'
     Desc  = 'A brief description.'
 }
 ```
 
-### PR Guidelines
+### Submission Guidelines
 
-To submit tools to the main repository:
-
-1. Tool must have an active public repository with community trust
-2. Installation payload must use `https://`
-3. Script must contain no obfuscated code
-4. Functionality must align with CLI enhancement
+1. Active public repository with community trust
+2. HTTPS-only installation URL
+3. No obfuscated code
+4. Serves developers, sysadmins, or power users
 
 ---
 
@@ -194,39 +179,71 @@ To submit tools to the main repository:
 
 ```
 irmhub/
-├── irmhub.ps1     # Main application (~500 lines)
-├── index.html     # Landing page (GitHub Pages)
+├── irmhub.ps1     # Main application (~622 lines)
+├── index.html     # GitHub Pages landing page
 ├── README.md      # This file
+├── AGENTS.md      # AI agent instructions
+├── CONTRIBUTING.md   # Contribution guidelines
+├── CHANGELOG.md   # Version history
+├── SECURITY.md    # Security policy
 ├── LICENSE        # MIT License
-└── AGENTS.md      # AI agent instructions
+├── .editorconfig  # Editor configuration
+└── .gitignore     # Git ignore rules
 ```
 
-### Script Structure
+### Script Structure (`irmhub.ps1`)
 
-| Section | Lines | Purpose |
-|:--------|:-----:|:--------|
-| Constants | 1-50 | Version, URLs, exit codes |
-| Bootstrap | 51-75 | TLS, console init |
-| Catalog | 76-100 | Tool registry |
-| Helpers | 101-175 | Utility functions |
-| UI | 176-275 | Display components |
-| Execution | 276-350 | Tool execution flow |
-| Main | 351-500 | Entry points |
+| Section | Purpose |
+|:--------|:--------|
+| Constants | Version, URLs, exit codes |
+| Helper Functions | Security, console, formatting, search utilities |
+| Bootstrap & Security | TLS enforcement, console initialization |
+| State & UI Configuration | ANSI colors, terminal width detection |
+| Tool Catalog | Tool registry (19 tools) |
+| UI Components | Banner, category list, tool display |
+| Execution Logic | Command execution in isolated scope |
+| Interactive Mode | Menu-driven TUI loop |
+| Non-Interactive Mode | CLI flag handling |
+| Main Entry Point | Mode routing |
+
+> **Note:** Functions are defined before they are called to support `Invoke-Expression` execution in PowerShell 5.1. This differs from standard `.ps1` execution where forward references work.
+
+---
+
+## Security Model
+
+| Guarantee | Implementation |
+|:----------|:---------------|
+| **TLS 1.2+** | `[Net.ServicePointManager]::SecurityProtocol` updated at startup |
+| **Command Preview** | Full command shown before execution |
+| **Explicit Consent** | Requires typing `YES` exactly to proceed |
+| **Elevation Check** | Warns if administrator rights are required |
+| **Isolated Execution** | `[scriptblock]::Create()` in relaxed scope prevents pollution |
+| **HTTPS Only** | Catalog enforces `https://` for all URLs |
+| **Zero Telemetry** | No outbound calls except the selected tool's installer |
 
 ---
 
 ## Troubleshooting
 
+### PowerShell 5.1 and `irm | iex`
+
+When running via the `irm ... | iex` pattern in PowerShell 5.1, the script is executed through `Invoke-Expression`. Known caveats:
+- **No forward references** — all functions must be defined before invocation (already handled in this script)
+- **No `[CmdletBinding()]` at script level** — scripts downloaded via this pattern do not support it; parameters are parsed manually
+
 ### ANSI Colors Not Working
 
 Run in Windows Terminal or VS Code integrated terminal. For legacy conhost:
+
 ```powershell
 irmhub.ps1 -NoColor
 ```
 
 ### Admin Tools Failing
 
-Some tools require Administrator privileges. Restart PowerShell as Admin:
+Restart PowerShell as Administrator:
+
 ```powershell
 Start-Process powershell -Verb RunAs
 ```
@@ -234,6 +251,7 @@ Start-Process powershell -Verb RunAs
 ### Network Errors
 
 Check internet connectivity and firewall rules:
+
 ```powershell
 Test-NetConnection github.com
 ```
