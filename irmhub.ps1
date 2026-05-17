@@ -109,7 +109,7 @@ $script:ANSI = if ($script:COLORS_ENABLED) @{
     Red = "$script:ESC[31m"; Green = "$script:ESC[32m"; Yellow = "$script:ESC[33m"
     Blue = "$script:ESC[34m"; Magenta = "$script:ESC[35m"; Cyan = "$script:ESC[36m"
     White = "$script:ESC[37m"; BrightBlack = "$script:ESC[90m"
-} @{ 
+} else { 
     Reset = ''; Bold = ''; Dim = ''
     Red = ''; Green = ''; Yellow = ''
     Blue = ''; Magenta = ''; Cyan = ''

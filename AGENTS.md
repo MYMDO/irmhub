@@ -1,240 +1,73 @@
 # IRMHUB Agent Guide
 
-## Project Overview
+## Project Facts
 
-IRMHUB is a single-file PowerShell TUI application for Windows that aggregates open-source tool installers. The project is intentionally simple—no build system, tests, or CI workflows.
+- **Single-file PowerShell TUI** — `irmhub.ps1` (619 lines), Windows only
+- **No build system, no tests, no CI** — manual testing only
+- **Zero external dependencies** — pure PowerShell 5.1+
+- **GitHub Pages** — `index.html` is the landing page
 
-## Project Structure
-
-```
-irmhub/
-├── irmhub.ps1        # Main application (~500 lines, v1.0.0)
-├── index.html        # Landing page for GitHub Pages
-├── README.md         # User documentation
-├── CONTRIBUTING.md   # Contribution guidelines
-├── SECURITY.md      # Security policy
-├── CHANGELOG.md     # Version history
-├── LICENSE          # MIT License
-├── AGENTS.md        # This file
-├── .gitignore       # Git ignore rules
-└── .editorconfig    # Editor configuration
-```
-
-## Script Architecture
-
-### Sections (irmhub.ps1)
-
-| Region | Lines | Purpose |
-|:-------|:------|:--------|
-| Constants | 1-50 | Version, URLs, exit codes |
-| Bootstrap | 51-75 | TLS enforcement, console init |
-| State/Config | 76-100 | ANSI colors, terminal width |
-| Catalog | 101-125 | Tool registry (19 tools) |
-| Helpers | 126-200 | Utility functions |
-| UI | 201-300 | Display components |
-| Execution | 301-375 | Tool execution flow |
-| Modes | 376-450 | Interactive/non-interactive |
-| Main | 451-500 | Entry point |
-
-### Constants
+## Developer Commands
 
 ```powershell
-$script:VERSION = '1.0.0'
-$script:AUTHOR = 'MYMDO'
-$script:REPO_URL = 'https://github.com/MYMDO/irmhub'
-$script:EXIT_CODES = @{ Success=0; UserCancel=1; AdminRequired=2; ... }
+# Verify script loads without errors
+pwsh -File irmhub.ps1 -List -NoColor
+
+# Test search / category
+pwsh -File irmhub.ps1 -Search "python" -NoColor
+pwsh -File irmhub.ps1 -Category "JavaScript" -NoColor
+
+# Run a tool without confirmation (automation)
+pwsh -File irmhub.ps1 -Run 6 -AutoConfirm
 ```
 
-## Script Requirements
+## Architecture
 
-- `#Requires -Version 5.1` — Minimum PowerShell 5.1
-- `$ErrorActionPreference = 'Stop'`
-- `Set-StrictMode -Version 2.0`
-- `[CmdletBinding()]` for parameter binding
+`irmhub.ps1` uses `#region` blocks in this order: Constants → Bootstrap → State/UI Config → Catalog → Helpers → UI → Execution → Interactive Mode → Non-Interactive Mode → Main.
 
-## Adding Tools to Catalog
+**Key quirk:** `Initialize-SecurityProtocol` and `Initialize-ConsoleTerminal` are called at lines 99-100 but defined later in the Helpers region. PowerShell parses the entire file before execution so this works.
 
-Catalog is defined in `$script:CATALOG` (lines ~100-125). Each entry:
+**Entry point:** `Main` function at the bottom routes to `Start-InteractiveMode` (default) or `Start-NonInteractiveMode` (when any CLI flag is set).
+
+## Adding Tools
+
+Edit `$script:CATALOG` in the Catalog region. Each entry:
 
 ```powershell
 [PSCustomObject]@{
-    Id    = N
+    Id    = N          # sequential, unique
     Name  = 'ToolName'
-    Cat   = 'Category'
-    Icon  = '[CAT]'
-    Admin = $false
+    Cat   = 'Category' # must match an existing category exactly
+    Icon  = '[CAT]'    # [PKG] [JS] [PY] [RS] [SYS] [UX] [MED] [DEV]
+    Admin = $false     # $true if elevation needed
     Cmd   = 'irm https://... | iex'
     GitHub = 'https://github.com/org/repo'
     Desc  = 'Description.'
 }
 ```
 
-### Categories
+**Rules:** HTTPS only, active public GitHub repo, no obfuscated code. Tool must serve developers/sysadmins/power users.
 
-| Category | Icon | Example Tools |
-|:---------|:----|:-------------|
-| Package Manager | [PKG] | Scoop, Chocolatey |
-| JavaScript | [JS] | Bun, Deno, fnm |
-| Python | [PY] | uv, Rye |
-| Rust | [RS] | Rustup |
-| System | [SYS] | WinUtil, MAS, WinGet-CLI |
-| Shell / UX | [UX] | Oh My Posh, Terminal-Icons |
-| Media | [MED] | Spicetify CLI, Spicetify Marketplace |
-| Dev Tools | [DEV] | Datatools |
+## Critical Gotchas
 
-### Rules
+- **Confirmation is case-sensitive.** The check uses `-ceq 'YES'` (not `-eq`). User must type exactly `YES` in uppercase.
+- **Tools execute in a relaxed scope.** Commands are wrapped with `Set-StrictMode -Off; $ErrorActionPreference = 'Continue'` to prevent third-party scripts from breaking under the script's top-level strict mode.
+- **Line numbers drift.** The script has grown to 619 lines. Do not rely on line number references — use region names instead.
+- **Exit codes matter.** Non-interactive mode returns exit codes (0=success, 1=cancel, 2=admin required, 3=not found, 4=exec failed, 5=network, 6=bad args, 7=update available).
 
-- Id must be unique and sequential
-- `Admin=$true` for tools requiring elevation
-- Commands MUST use `https://` and `irm ... | iex` pattern
-- Tool must have active public GitHub repository
+## Conventions
 
-## CLI Parameters
-
-| Parameter | Type | Description |
-|:----------|:-----|:------------|
-| `-List` | switch | Display all tools |
-| `-Search` | string | Search by keyword |
-| `-Run` | int | Execute tool by ID |
-| `-Category` | string | Filter by category name |
-| `-AutoConfirm` | switch | Skip YES confirmation |
-| `-NoColor` | switch | Disable ANSI colors |
-| `-Version` | switch | Show version info |
-| `-Update` | switch | Check GitHub for updates |
-
-## Exit Codes
-
-| Code | Constant | Meaning |
-|:-----|:---------|:--------|
-| 0 | Success | Execution completed |
-| 1 | UserCancel | User declined |
-| 2 | AdminRequired | Needs elevation |
-| 3 | ToolNotFound | Invalid ID |
-| 4 | ExecutionFailed | Tool error |
-| 5 | NetworkError | No internet |
-| 6 | InvalidParameter | Bad args |
-| 7 | UpdateAvailable | New version exists |
-
-## Key Conventions
-
-### Security
-
-- TLS 1.2+ enforced at startup (lines ~55-65)
-- ANSI color support initialized for PS 5.1 (lines ~66-75)
-- Tools execute via `[scriptblock]::Create()` in isolated scope (line ~360)
-- Confirmation requires typing `YES` exactly, case-insensitive
-
-### Color Handling
-
-```powershell
-$script:COLORS_ENABLED = -not $NoColor
-$script:ANSI = if ($script:COLORS_ENABLED) @{ ... } @{ ... }
-```
-
-### Console Width
-
-```powershell
-function Get-ConsoleWidth {
-    try {
-        $width = $Host.UI.RawUI.WindowSize.Width
-        if ($null -ne $width -and $width -gt 0) {
-            return [Math]::Min(100, $width - 2)
-        }
-    } catch { }
-    return 78
-}
-```
+- **EditorConfig:** 4-space indent for `.ps1`, 2-space for `.md`/`.json`/`.yml`, LF line endings, UTF-8
+- **Commits:** `type: description` (feat:, fix:, refactor:, docs:)
+- **Branches:** `feature/tool-name`
+- **gitignore:** excludes `.github/`, `*.yml`, `*.yaml` — do not add CI files to this repo
 
 ## Testing
 
-```powershell
-# Interactive mode
-pwsh -File irmhub.ps1
+No automated tests. Before committing changes:
 
-# List all tools
-pwsh -File irmhub.ps1 -List -NoColor
-
-# Search
-pwsh -File irmhub.ps1 -Search "python"
-
-# Run specific tool
-pwsh -File irmhub.ps1 -Run 6 -AutoConfirm
-
-# Test colors disabled
-pwsh -File irmhub.ps1 -List -NoColor
-```
-
-### Manual Testing Checklist
-
-- [ ] `-List` shows all 19 tools
-- [ ] `-Search` returns correct results
-- [ ] `-Category` filters correctly
-- [ ] `-Run` executes tool
-- [ ] `-AutoConfirm` skips confirmation
-- [ ] `-NoColor` disables colors
-- [ ] `-Version` shows version
-- [ ] ANSI colors render correctly
-- [ ] Admin warning shows for elevated tools
-- [ ] Exit codes are correct
-
-## HTML Landing Page
-
-`index.html` is a static landing page for GitHub Pages:
-
-- SEO meta tags (description, keywords, robots)
-- Open Graph and Twitter Card tags
-- JSON-LD structured data (Schema.org)
-- ARIA labels and roles for accessibility
-- CSS custom properties for theming
-- Responsive design (mobile-first)
-- `prefers-reduced-motion` support
-
-### Copy Button
-
-Uses `navigator.clipboard.writeText()` with fallback:
-
-```javascript
-navigator.clipboard.writeText(command)
-    .then(() => showCopySuccess(...))
-    .catch(() => fallbackCopy(command));
-```
-
-## Documentation Files
-
-| File | Purpose | Audience |
-|:-----|:--------|:---------|
-| README.md | Full project documentation | Users, contributors |
-| CONTRIBUTING.md | How to contribute | Developers |
-| SECURITY.md | Security policy | Security researchers |
-| CHANGELOG.md | Version history | All |
-| AGENTS.md | AI agent instructions | Claude, Copilot, etc. |
-
-## Repository Conventions
-
-- Main branch: `main`
-- Feature branches: `feature/tool-name`
-- Commit style: `type: description` (feat:, fix:, refactor:, docs:)
-- Versioning: Semantic (1.0.0)
-
-## Important Notes
-
-1. **No build system** — Script is self-contained
-2. **No tests** — Manual testing only
-3. **No CI** — PRs reviewed manually
-4. **Windows only** — PowerShell TUI for Windows
-5. **No dependencies** — Zero external modules
-
-## Troubleshooting
-
-### Colors not working
-```powershell
-irmhub.ps1 -NoColor
-```
-
-### Admin tools failing
-Restart PowerShell as Administrator.
-
-### Network errors
-```powershell
-Test-NetConnection github.com
-```
+1. `pwsh -File irmhub.ps1 -List -NoColor` — loads cleanly, shows all tools
+2. `pwsh -File irmhub.ps1 -Search "<keyword>" -NoColor` — search works
+3. `pwsh -File irmhub.ps1 -Category "<cat>" -NoColor` — filter works
+4. Verify ANSI colors render in Windows Terminal (test without `-NoColor`)
+5. Verify admin warning appears for Admin tools when not elevated
