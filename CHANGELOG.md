@@ -1,84 +1,50 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Формат — [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+версіонування — [SemVer](https://semver.org/spec/v2.0.0.html).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [Unreleased]
+
+### Fixed
+
+- **Interactive mode crash** — `Clear-Console` `CommandNotFoundException` виправлено викликом `Clear-Host` напряму
+- **Search UX** — пустий результат пошуку тепер показує "No tools found" та паузу 1.2с замість мовчазного повернення
+- **Case-insensitive category** — `-Category "javascript"` тепер працює так само як `"JavaScript"` (через `-ieq`)
+- **Cross-platform crash** — `Test-AdministratorRights` обгорнуто в `try/catch`, на Linux/macOS повертає `$false` замість помилки
+- **Console width / StrictMode** — `[char] * [int]` замінено на `[string]` скрізь, де використовується повторення
+- **Hashtable dot-access** — ANSI-кольори тепер через `$script:ANSI['Red']` замість `.Red`
+- **Variable collision renamed** — `$script:VERSION` → `$script:SCRIPT_VERSION` щоб не конфліктувало з `$Version`
+
+### Removed
+
+- Невикористовуваний параметр `$Header` з `Show-ToolList`
+
+### Changed
+
+- Повідомлення при запуску: "child runspace" → "Preparing execution scope"
+- Документацію синхронізовано: AGENTS.md переписано як компактний гайд з архітектурними quirks
+- Усі команди тестування тепер використовують `-NoColor` для сумісності
+
+---
 
 ## [1.0.0] - 2026-04-06
 
 ### Added
 
-- **19 tools** across 8 categories:
-  - Package Managers: Scoop, Chocolatey
-  - JavaScript: Bun, Deno, fnm
-  - Python: uv, Rye
-  - Rust: Rustup
-  - System: WinUtil, MAS, PowerShell 7, InstallOffice, Win11Debloat, WinGet-CLI
-  - Shell/UX: Oh My Posh, Terminal-Icons
-  - Media: Spicetify CLI, Spicetify Marketplace
-  - Dev Tools: Datatools
-
-- **Interactive TUI** with ANSI color support
-- **Command-line interface** with multiple modes:
-  - `-List` — Display all tools
-  - `-Search` — Search by keyword
-  - `-Run` — Execute tool by ID
-  - `-Category` — Filter by category
-  - `-AutoConfirm` — Skip confirmation
-  - `-NoColor` — Disable colors
-  - `-Version` — Show version
-  - `-Update` — Check for updates
-
-- **Security features**:
-  - TLS 1.2+ enforcement
-  - HTTPS-only URLs
-  - Isolated execution scope
-  - Admin privilege detection
-  - YES confirmation required
-
-- **Documentation**:
-  - README.md with full documentation
-  - CONTRIBUTING.md guidelines
-  - SECURITY.md policy
-  - AGENTS.md for AI agents
+- **19 tools** across 8 categories
+- **Interactive TUI** з ANSI-кольорами
+- **CLI**: `-List`, `-Search`, `-Run`, `-Category`, `-AutoConfirm`, `-NoColor`, `-Version`, `-Update`
+- **Security**: TLS 1.2+, HTTPS-only, ізольований scope, попередження адмін-прав, підтвердження YES
+- **Documentation**: README, CONTRIBUTING, SECURITY, AGENTS
 
 ### Fixed
 
-- WinGet-CLI installer URL updated to `winget.pro`
-- Fallback URL `asheroto/winget-install` for 404 errors
-- ANSI color compatibility for PowerShell 5.1
-- VirtualTerminalProcessing for legacy conhost
-- TLS 1.3 fallback for PS 5.1
-- StrictMode propagation causing third-party tool failures
-- PropertyNotFoundException for Count in older PowerShell
-
-### Refactored
-
-- Modernized UI with better animations
-- Enhanced PowerShell script structure with regions
-- Improved code documentation
-- Better error handling
-- Optimized console width detection
-
-### Documentation
-
-- Comprehensive README with tool catalog
-- Contributing guidelines
-- Security policy
-- AI agent instructions
-
----
-
-## [Unreleased]
-
-### Planned
-
-- [ ] PowerShell Gallery distribution
-- [ ] Winget package submission
-- [ ] Config file support for custom tools
-- [ ] JSON/YAML catalog import
-- [ ] Tool update notifications
+- WinGet-CLI URL → `winget.pro`
+- ANSI-кольори для PS 5.1
+- VirtualTerminalProcessing для legacy conhost
+- TLS 1.3 fallback для PS 5.1
+- StrictMode у third-party скриптах
+- `Count` PropertyNotFoundException
 
 ---
 
@@ -87,32 +53,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | Version | Date | Status |
 |:--------|:-----|:-------|
 | 1.0.0 | 2026-04-06 | Current |
-| 0.1.0 | 2026-03-30 | Initial release |
-
----
-
-## Migration Guide
-
-### From < 1.0 to 1.0
-
-No breaking changes for interactive users.
-
-For automation scripts using `-List` or `-Search`:
-
-```powershell
-# Old (if applicable)
-.\irmhub.ps1 -list  # May have worked
-
-# New (correct)
-.\irmhub.ps1 -List
-```
-
-Exit codes may have changed. Check new exit codes in README.md.
-
----
-
-## Deprecation Policy
-
-- Deprecated features will be announced 3 months in advance
-- Removal will happen in major version bumps
-- Security fixes are applied immediately
+| 0.1.0 | 2026-03-30 | Initial |

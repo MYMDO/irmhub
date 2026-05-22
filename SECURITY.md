@@ -2,134 +2,124 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-|:--------|:------------------|
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:               |
+| Version | Supported |
+|:--------|:----------|
+| 1.0.x | :white_check_mark: |
+| < 1.0 | :x: |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in IRMHUB, please report it responsibly:
+1. **Не відкривайте** публічний GitHub issue
+2. Напишіть мейнтейнерам або використайте GitHub private vulnerability reporting
+3. Додайте детальний опис вразливості
+4. Дайте час на оцінку та виправлення (48–72 год)
 
-1. **Do NOT** open a public GitHub issue
-2. Email the maintainers directly or use GitHub's private vulnerability reporting
-3. Include detailed information about the vulnerability
-4. Allow time for assessment and fix before public disclosure
-
-Expected response time: 48-72 hours
+---
 
 ## Security Model
-
-IRMHUB implements multiple layers of security to protect users:
 
 ### Transport Layer Security
 
 ```powershell
-# TLS 1.2+ enforced at startup
-[Net.ServicePointManager]::SecurityProtocol = 
+# TLS 1.2+ примусово при старті
+[Net.ServicePointManager]::SecurityProtocol =
     [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 ```
 
 ### HTTPS Enforcement
 
-- All tool URLs must use `https://`
-- No HTTP-only URLs allowed in catalog
-- Certificate validation enabled by default
+- Усі URL в каталозі — тільки `https://`
+- HTTP URL заборонені
+- Валідація сертифікатів увімкнена за замовчуванням
 
 ### Command Transparency
 
-Before any tool executes, IRMHUB displays:
-
-1. Tool name and description
-2. Full GitHub repository URL
-3. Exact command to be executed
-4. Administrator privilege requirement
-5. Security checklist
+Перед виконанням IRMHUB показує:
+1. Назву та опис інструменту
+2. Повний GitHub URL
+3. Точну команду для виконання
+4. Чи потрібні права адміністратора
+5. Чеклист безпеки
 
 ### User Consent
 
-- Requires typing `YES` (exact match, case-sensitive)
-- No shortcuts or abbreviations accepted
-- Cancel by pressing Enter or typing anything else
+- Потрібно ввести `YES` (case-sensitive, точно)
+- Скорочення або синоніми не приймаються
+- Enter або будь-що інше — скасування
 
 ### Scope Isolation
 
-Tools execute in isolated scriptblock:
+Інструменти виконуються в ізольованому scriptblock:
 
 ```powershell
 $sb = [scriptblock]::Create($relaxedCmd)
 & $sb
 ```
 
-This prevents:
-- Global scope pollution
-- Variable leakage
-- Function shadowing
+Це запобігає:
+- Забрудненню глобального scope
+- Витоку змінних
+- Перевизначенню функцій
 
 ### Privilege Awareness
 
-Tools requiring Administrator rights are flagged in catalog:
+Інструменти, що потребують адмін-прав, позначені `Admin = $true` в каталозі.
+IRMHUB попереджає перед запуском, якщо:
+- Інструмент вимагає адмін-прав
+- Поточна сесія не підвищена
 
-```powershell
-Admin = $true  # or $false
-```
+### Cross-Platform Safety
 
-IRMHUB warns users before execution if:
-- Tool requires admin rights
-- Current session is not elevated
+На Linux/macOS OS-залежні API (наприклад, `[Security.Principal.WindowsIdentity]::GetCurrent()`) обгорнуті в `try/catch` і безпечно повертають `$false`.
+
+---
 
 ## Known Limitations
 
 ### User Responsibility
 
-IRMHUB is a **launcher** that aggregates other tools. Security depends on:
-
-1. **Tool Maintainers** — Each tool's security practices
-2. **User Vigilance** — Reviewing commands before execution
-3. **Network Security** — HTTPS and TLS enforcement on user's end
+IRMHUB — **запускач**, який агрегує інструменти. Безпека залежить від:
+1. Мейнтейнерів кожного інструменту
+2. Вашої пильності — перевіряйте команди перед виконанням
+3. Мережевої безпеки — ваш TLS/HTTPS
 
 ### What IRMHUB Does NOT Do
 
-- Verify tool integrity post-install
-- Scan for malware in third-party scripts
-- Provide sandboxing for executed tools
-- Monitor installed software
-- Provide update notifications for installed tools
+- Верифікує цілісність інструментів після встановлення
+- Сканує сторонні скрипти на malware
+- Надає пісочницю для виконання
+- Моніторить встановлене ПЗ
+- Сповіщає про оновлення встановлених інструментів
+
+---
 
 ## Best Practices
 
 ### For Users
 
-1. **Always verify URLs** before running `irm | iex`
-2. **Review source code** of tools before first run
-3. **Use `-List`** to preview tools without executing
-4. **Report suspicious tools** via GitHub issues
-5. **Keep PowerShell updated** to latest version
+1. Завжди перевіряйте URL перед `irm | iex`
+2. Оглядайте код перед першим запуском
+3. Використовуйте `-List` для попереднього перегляду
+4. Повідомляйте про підозрілі інструменти в issues
+5. Оновлюйте PowerShell до останньої версії
 
 ### For Tool Maintainers
 
-1. **Use HTTPS** for all download URLs
-2. **Sign releases** where possible
-3. **Provide checksums** for binaries
-4. **Maintain security.txt** at repository root
-5. **Respond to security reports** promptly
-
-## Security Checklist
-
-Before adding a tool to IRMHUB:
-
-- [ ] Tool repository is publicly accessible
-- [ ] Install script uses `https://`
-- [ ] No obfuscated or minified code
-- [ ] No telemetry or data collection
-- [ ] Clean security history (no recent vulnerabilities)
-
-## Security References
-
-- [PowerShell Security Best Practices](https://docs.microsoft.com/en-us/powershell/scripting/security/removing-scripts-from-internet)
-- [Windows Security](https://docs.microsoft.com/en-us/windows/security/)
-- [NIST Guidelines](https://csrc.nist.gov/publications/sp800-53)
+1. Використовуйте HTTPS для всіх URL
+2. Підписуйте релізи
+3. Надавайте контрольні суми (checksums)
+4. Додавайте `security.txt` в корінь репозиторію
 
 ---
 
-**Remember:** Security is a shared responsibility. Stay vigilant!
+## Security Checklist (додавання інструменту)
+
+- [ ] Публічний репозиторій
+- [ ] HTTPS URL для встановлення
+- [ ] Без обфускації
+- [ ] Без телеметрії
+- [ ] Чиста історія безпеки
+
+---
+
+*Безпека — спільна відповідальність. Будьте пильні!*
