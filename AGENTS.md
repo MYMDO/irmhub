@@ -1,8 +1,8 @@
 # IRMHUB Agent Guide
 
 ## Project Facts
-- **Single-file PowerShell TUI:** `irmhub.ps1` (656 рядків). Windows (PS 5.1+), Linux/macOS (pwsh 7+).
-- **No build system, tests, or CI:** лише ручна верифікація.
+- **Single-file PowerShell TUI:** `irmhub.ps1` (652 рядки). Windows (PS 5.1+), Linux/macOS (pwsh 7+).
+- **Pester тести + PSScriptAnalyzer CI:** `tests/` та `.github/workflows/lint.yml`.
 - **Zero external dependencies:** чистий PowerShell.
 - **GitHub Pages:** `index.html` — лендінг.
 

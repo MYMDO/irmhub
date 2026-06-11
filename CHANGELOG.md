@@ -39,7 +39,7 @@
 - **MAS disclaimer** — додано "Use at your own risk and in compliance with local laws"
 - Повідомлення запуску: "child runspace" → "Preparing execution scope"
 - Документацію повністю оновлено (AGENTS.md, README, CONTRIBUTING, CHANGELOG, SECURITY, index.html)
-- Рядки: 644 → 651
+- Рядки: 644 → 651 → 652
 
 ### DevOps
 

@@ -14,8 +14,8 @@
 
 ### 2. Submit Tool Proposals
 
-Відкрийте issue з шаблоном **Tool Request**:
-
+Відкрийте issue через шаблон **[New Tool Request](https://github.com/MYMDO/irmhub/issues/new?template=new-tool.yml)**
+або вручну заповніть:
 ```
 Name: [Tool Name]
 Category: [Package Manager / JS / Python / Rust / System / Shell/UX / Media / Dev Tools]
@@ -57,7 +57,21 @@ Description: [Короткий опис]
 
 ## Testing
 
-### Verification Commands
+### Pester Unit Tests
+
+```powershell
+# Запуск усіх тестів
+Invoke-Pester ./tests/irmhub.Tests.ps1
+```
+
+### PSScriptAnalyzer
+
+```powershell
+# Локальна перевірка (те саме, що в CI)
+Invoke-ScriptAnalyzer ./irmhub.ps1 -Severity Error
+```
+
+### Manual Verification
 
 ```powershell
 # Перевірка синтаксису та список усіх 19 інструментів
@@ -130,8 +144,9 @@ git clone https://github.com/YOUR-USERNAME/irmhub.git
 cd irmhub
 git checkout -b feature/my-tool
 
-# Тестування
+# Тестування (мануальне та unit)
 pwsh -File irmhub.ps1 -List -NoColor
+Invoke-Pester ./tests/irmhub.Tests.ps1
 
 git add .
 git commit -m "feat: Add MyTool to catalog"
