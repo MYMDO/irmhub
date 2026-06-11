@@ -46,7 +46,7 @@
 #>
 
 # Parse script-level parameters manually — avoids MetadataError with irm | iex in PS 5.1
-$List = $false; $Search = $null; [int]$Run = 0; $Category = $null
+$List = $false; $Search = $null; [int]$Run = -1; $Category = $null
 $AutoConfirm = $false; $NoColor = $false; $Version = $false; $Update = $false
 
 $i = 0
@@ -60,6 +60,7 @@ while ($i -lt $args.Count) {
         '-NoColor' { $NoColor = $true }
         '-Version' { $Version = $true }
         '-Update' { $Update = $true }
+        default { Write-Warning "Unknown parameter: $($args[$i])"; exit 6 }
     }
     $i++
 }
@@ -159,7 +160,7 @@ function Get-ToolsByCategory {
     if ([string]::IsNullOrWhiteSpace($Category) -or $Category -eq 'All') {
         return $script:CATALOG
     }
-    return $script:CATALOG | Where-Object { $_.Cat -eq $Category -or $_.Cat -ieq $Category }
+    return $script:CATALOG | Where-Object { $_.Cat -ieq $Category }
 }
 
 function Search-Tools {
@@ -188,7 +189,7 @@ function Get-LatestVersion {
 
 function Test-NetworkConnectivity {
     try {
-        $null = Invoke-WebRequest -Uri 'https://github.com' -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
+        $null = [System.Net.Dns]::GetHostAddresses('github.com')
         return $true
     } catch {
         return $false
@@ -222,6 +223,17 @@ if ($script:COLORS_ENABLED) {
 }
 
 $script:WIDTH = Get-ConsoleWidth
+
+$script:CATEGORY_COLORS = @{
+    'Package Manager' = 'Green'
+    'JavaScript' = 'Yellow'
+    'Python' = 'Blue'
+    'Rust' = 'Red'
+    'System' = 'Magenta'
+    'Shell / UX' = 'Cyan'
+    'Media' = 'Magenta'
+    'Dev Tools' = 'BrightBlack'
+}
 #endregion
 
 #region Tool Catalog
@@ -235,7 +247,7 @@ $script:CATALOG = @(
     [PSCustomObject]@{ Id=7;  Name='Rye';                    Cat='Python';          Icon='[PY] '; Admin=$false; Cmd='irm https://rye.astral.sh/get-windows.ps1 | iex';                                                                                             GitHub='https://github.com/astral-sh/rye';                         Desc='Holistic Python project and environment manager. Handles venvs.' }
     [PSCustomObject]@{ Id=8;  Name='Rustup';                 Cat='Rust';            Icon='[RS] '; Admin=$false; Cmd='irm https://win.rustup.rs/x86_64 -OutFile rustup-init.exe; .\rustup-init.exe';                                                                    GitHub='https://github.com/rust-lang/rustup';                      Desc='Official Rust toolchain installer. rustc, cargo, clippy, rustfmt.' }
     [PSCustomObject]@{ Id=9;  Name='WinUtil (Chris Titus)';  Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://christitus.com/win | iex';                                                                                                  GitHub='https://github.com/ChrisTitusTech/winutil';                Desc='All-in-one Windows debloat, tweaks, software install GUI.' }
-    [PSCustomObject]@{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                   GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows and Office activator. HWID, KMS38, Online KMS.' }
+    [PSCustomObject]@{ Id=10; Name='MAS (Activation)';       Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://get.activated.win | iex';                                                                                                   GitHub='https://github.com/massgravel/Microsoft-Activation-Scripts';Desc='Open-source Windows/Office activation script. HWID, KMS38, Online KMS. Use at your own risk and in compliance with local laws.' }
     [PSCustomObject]@{ Id=11; Name='PowerShell 7';           Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"';                                                                              GitHub='https://github.com/PowerShell/PowerShell';                 Desc='Official Microsoft installer for PowerShell 7 (cross-platform).' }
     [PSCustomObject]@{ Id=12; Name='Oh My Posh';             Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='irm https://ohmyposh.dev/install.ps1 | iex';                                                                                                GitHub='https://github.com/JanDeDobbeleer/oh-my-posh';             Desc='Custom prompt engine for any shell. 200+ themes, Nerd Font icons.' }
     [PSCustomObject]@{ Id=13; Name='Terminal-Icons';         Cat='Shell / UX';      Icon='[UX] '; Admin=$false; Cmd='Install-Module -Name Terminal-Icons -Repository PSGallery -Force';                                                                                      GitHub='https://github.com/devblackops/Terminal-Icons';            Desc='PowerShell module to show file and folder icons in the terminal.' }
@@ -246,6 +258,9 @@ $script:CATALOG = @(
     [PSCustomObject]@{ Id=18; Name='Win11Debloat (Raphire)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://debloat.raphi.re/ | iex';                                                                                                  GitHub='https://github.com/Raphire/Win11Debloat';                  Desc='Remove bloatware, telemetry, and declutter Windows 10/11 quickly.' }
     [PSCustomObject]@{ Id=19; Name='WinGet-CLI (LTSC/LTSB)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://winget.pro | iex';                                                                                                              GitHub='https://github.com/asheroto/winget-install';              Desc='Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.' }
 )
+
+$dupeIds = $script:CATALOG | Group-Object Id | Where-Object Count -gt 1
+if ($dupeIds) { throw "Duplicate catalog IDs: $($dupeIds.Name -join ', ')" }
 #endregion
 
 #region UI Components
@@ -281,7 +296,7 @@ function Show-CategoryList {
     Write-Host " $(Format-Color 'FILTER BY CATEGORY' 'BrightBlack')"
     Write-Host ''
     
-    for ($i = 0; $i -lt $categories.Length; $i++) {
+    for ($i = 0; $i -lt $categories.Count; $i++) {
         Write-Host "  $(Format-Color "[$i]" 'Yellow') $($categories[$i])" -ForegroundColor Gray
     }
     Write-Host ''
@@ -304,19 +319,8 @@ function Show-ToolList {
         return
     }
     
-    $colorMap = @{
-        'Package Manager' = 'Green'
-        'JavaScript' = 'Yellow'
-        'Python' = 'Blue'
-        'Rust' = 'Red'
-        'System' = 'Magenta'
-        'Shell / UX' = 'Cyan'
-        'Media' = 'Magenta'
-        'Dev Tools' = 'BrightBlack'
-    }
-
     foreach ($tool in $Tools) {
-        $cColor = if ($colorMap.ContainsKey($tool.Cat)) { $colorMap[$tool.Cat] } else { 'White' }
+        $cColor = if ($script:CATEGORY_COLORS.ContainsKey($tool.Cat)) { $script:CATEGORY_COLORS[$tool.Cat] } else { 'White' }
         $adminBadge = if ($tool.Admin) { " $(Format-Color '[ADMIN REQUIRED]' 'Red')" } else { '' }
         
         Write-Host "  $(Format-Color "[$($tool.Id)]" 'Yellow' -Bold) $(Format-Color $tool.Icon $cColor) $(Format-Color $tool.Name 'White' -Bold)$adminBadge"
@@ -381,11 +385,11 @@ function Show-AdminWarning {
 
 function Show-SearchUI {
     Show-Banner
-    $script:SEARCH_KEYWORD = Read-Host " $(Format-Color 'Search Catalog' 'Cyan') (name / keyword / category)"
-    if ([string]::IsNullOrWhiteSpace($script:SEARCH_KEYWORD)) { return $null }
+    $keyword = Read-Host " $(Format-Color 'Search Catalog' 'Cyan') (name / keyword / category)"
+    if ([string]::IsNullOrWhiteSpace($keyword)) { return $null }
     
-    $results = Search-Tools -Keyword $script:SEARCH_KEYWORD
-    return $results
+    $results = Search-Tools -Keyword $keyword
+    return [PSCustomObject]@{ Keyword = $keyword; Results = $results }
 }
 #endregion
 
@@ -395,6 +399,7 @@ function Invoke-ToolExecution {
         [Parameter(Mandatory = $true)]
         [PSCustomObject]$Tool,
         [switch]$SkipConfirmation,
+        [switch]$AutoConfirm,
         [switch]$NonInteractive
     )
     
@@ -407,7 +412,7 @@ function Invoke-ToolExecution {
     }
 
     if ($SkipConfirmation -or $AutoConfirm) {
-        return Execute-ToolCommand -Tool $Tool -NonInteractive:$NonInteractive
+        return Invoke-ToolCommand -Tool $Tool -NonInteractive:$NonInteractive
     }
 
     Show-SecurityChecklist -Tool $Tool
@@ -415,7 +420,7 @@ function Invoke-ToolExecution {
     $confirmation = Read-Host " Type $(Format-Color 'YES' 'Green' -Bold) to strictly confirm and execute, or press Enter to cancel"
     
     if ($confirmation -ceq 'YES') {
-        return Execute-ToolCommand -Tool $Tool
+        return Invoke-ToolCommand -Tool $Tool
     } else {
         Write-Host ''
         Write-Host " $(Format-Color 'Execution Cancelled.' 'Yellow') No system modifications were made." -ForegroundColor Yellow
@@ -424,7 +429,7 @@ function Invoke-ToolExecution {
     }
 }
 
-function Execute-ToolCommand {
+function Invoke-ToolCommand {
     param(
         [PSCustomObject]$Tool,
         [switch]$NonInteractive
@@ -474,7 +479,6 @@ function Execute-ToolCommand {
 
 #region Interactive Mode
 function Start-InteractiveMode {
-    Set-StrictMode -Off
     try {
         while ($true) {
             Show-Banner
@@ -490,24 +494,24 @@ function Start-InteractiveMode {
                     return $script:EXIT_CODES.Success
                 }
                 's' {
-                    $results = Show-SearchUI
-                    if ($null -ne $results -and @($results).Length -gt 0) {
+                    $searchResult = Show-SearchUI
+                    if ($null -ne $searchResult -and @($searchResult.Results).Count -gt 0) {
                         Show-Banner
-                        Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $script:SEARCH_KEYWORD 'Cyan' -Bold)  $(Format-Color "($(@($results).Length) found)" 'BrightBlack')"
+                        Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $searchResult.Keyword 'Cyan' -Bold)  $(Format-Color "($(@($searchResult.Results).Count) found)" 'BrightBlack')"
                         Write-Host ''
-                        Show-ToolList -Tools $results
-                        Prompt-ToolSelection -Tools $results
-                    } elseif (-not [string]::IsNullOrWhiteSpace($script:SEARCH_KEYWORD)) {
+                        Show-ToolList -Tools $searchResult.Results
+                        Prompt-ToolSelection -Tools $searchResult.Results
+                    } elseif ($null -ne $searchResult -and -not [string]::IsNullOrWhiteSpace($searchResult.Keyword)) {
                         Write-Host ''
-                        Write-Host " $(Format-Color 'No tools found for:' 'Yellow') $(Format-Color $script:SEARCH_KEYWORD 'Cyan')"
+                        Write-Host " $(Format-Color 'No tools found for:' 'Yellow') $(Format-Color $searchResult.Keyword 'Cyan')"
                         Start-Sleep -Milliseconds 1200
                     }
-                    continue
+                    continue  # continue outer while loop
                 }
                 default {
                     if ($userInput -match '^\d+$') {
                         $categoryIndex = [int]$userInput
-                        if ($categoryIndex -ge 0 -and $categoryIndex -lt $categories.Length) {
+                        if ($categoryIndex -ge 0 -and $categoryIndex -lt $categories.Count) {
                             $selectedCategory = $categories[$categoryIndex]
                             $filteredTools = Get-ToolsByCategory -Category $selectedCategory
                             
@@ -567,7 +571,11 @@ function Start-NonInteractiveMode {
             return $script:EXIT_CODES.NetworkError
         }
         $latest = Get-LatestVersion
-        if ($null -ne $latest -and $latest -ne $script:SCRIPT_VERSION) {
+        if ($null -eq $latest) {
+            Write-Host "No releases found on GitHub. You are running v$script:SCRIPT_VERSION (build version)." -ForegroundColor Yellow
+            return $script:EXIT_CODES.Success
+        }
+        if ($latest -ne $script:SCRIPT_VERSION) {
             Write-Host "Update available: v$latest (current: v$script:SCRIPT_VERSION)" -ForegroundColor Yellow
             Write-Host "Run: irm $script:RAW_URL | iex" -ForegroundColor Cyan
             return $script:EXIT_CODES.UpdateAvailable
@@ -601,7 +609,11 @@ function Start-NonInteractiveMode {
             return $script:EXIT_CODES.ToolNotFound
         }
         Write-Host "Executing: $($tool.Name)..." -ForegroundColor Cyan
-        return Invoke-ToolExecution -Tool $tool -SkipConfirmation:$AutoConfirm -NonInteractive
+        return Invoke-ToolExecution -Tool $tool -SkipConfirmation:$AutoConfirm -AutoConfirm:$AutoConfirm -NonInteractive
+    }
+    if ($Run -eq 0) {
+        Write-Host "Invalid ID: must be a positive number." -ForegroundColor Red
+        return $script:EXIT_CODES.InvalidParameter
     }
 
     if (-not [string]::IsNullOrWhiteSpace($Category)) {

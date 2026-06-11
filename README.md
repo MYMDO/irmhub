@@ -187,7 +187,7 @@ irmhub.ps1
 
 ```
 irmhub/
-├── irmhub.ps1     # Головний застосунок (644 рядки)
+├── irmhub.ps1     # Головний застосунок (656 рядків)
 ├── index.html     # GitHub Pages лендінг
 ├── README.md      # Цей файл
 ├── AGENTS.md      # Інструкції для AI-агентів

@@ -5,15 +5,29 @@
 
 ## [Unreleased]
 
+### Security
+
+- **Function renamed** — `Execute-ToolCommand` → `Invoke-ToolCommand` (PS Approved Verb)
+- **Explicit `$AutoConfirm`** — більше не захоплюється з script scope; передається як параметр
+- **StrictMode global** — видалено `Set-StrictMode -Off` з `Start-InteractiveMode`
+- **Network check** — `Test-NetworkConnectivity` тепер використовує `[System.Net.Dns]::GetHostAddresses()` замість `Invoke-WebRequest`
+- **Unknown parameters** — додано обробку невідомих аргументів (exit 6)
+- **Catalog validation** — додано перевірку на дублюючі ID при старті
+
 ### Fixed
 
 - **Interactive mode crash** — `Clear-Console` `CommandNotFoundException` виправлено викликом `Clear-Host` напряму
-- **Search UX** — пустий результат пошуку тепер показує "No tools found" та паузу 1.2с замість мовчазного повернення
-- **Case-insensitive category** — `-Category "javascript"` тепер працює так само як `"JavaScript"` (через `-ieq`)
-- **Cross-platform crash** — `Test-AdministratorRights` обгорнуто в `try/catch`, на Linux/macOS повертає `$false` замість помилки
-- **Console width / StrictMode** — `[char] * [int]` замінено на `[string]` скрізь, де використовується повторення
-- **Hashtable dot-access** — ANSI-кольори тепер через `$script:ANSI['Red']` замість `.Red`
-- **Variable collision renamed** — `$script:VERSION` → `$script:SCRIPT_VERSION` щоб не конфліктувало з `$Version`
+- **Search UX** — пустий результат пошуку тепер показує "No tools found" та паузу 1.2с
+- **Case-insensitive category** — `-Category "javascript"` працює як `"JavaScript"` (через `-ieq`)
+- **Duplicate condition in `Get-ToolsByCategory`** — видалено зайвий `-eq`, залишено тільки `-ieq`
+- **Cross-platform crash** — `Test-AdministratorRights` обгорнуто в `try/catch`
+- **StrictMode / char-int** — `[char] * [int]` замінено на `[string]` скрізь
+- **Hashtable dot-access** — ANSI-кольори через `$script:ANSI['Red']`
+- **Variable collision** — `$script:VERSION` → `$script:SCRIPT_VERSION`
+- **`$Run` sentinel fix** — `$Run` тепер -1 (замість 0), додано валідацію від'ємних/нульових ID
+- **`-Update` без release** — додано fallback повідомлення
+- **`$categories.Length` → `.Count`** — уніфіковано для колекцій
+- **`Show-SearchUI` side-effect** — більше не встановлює `$script:SEARCH_KEYWORD`, повертає `[PSCustomObject]`
 
 ### Removed
 
@@ -21,9 +35,11 @@
 
 ### Changed
 
-- Повідомлення при запуску: "child runspace" → "Preparing execution scope"
-- Документацію синхронізовано: AGENTS.md переписано як компактний гайд з архітектурними quirks
-- Усі команди тестування тепер використовують `-NoColor` для сумісності
+- **Color map** — локальний `$colorMap` у `Show-ToolList` винесено в `$script:CATEGORY_COLORS` (State & UI Configuration)
+- **MAS disclaimer** — додано "Use at your own risk and in compliance with local laws"
+- Повідомлення запуску: "child runspace" → "Preparing execution scope"
+- Документацію повністю оновлено (AGENTS.md, README, CONTRIBUTING, CHANGELOG, SECURITY, index.html)
+- Рядки: 644 → 656
 
 ---
 

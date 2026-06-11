@@ -1,7 +1,7 @@
 # IRMHUB Agent Guide
 
 ## Project Facts
-- **Single-file PowerShell TUI:** `irmhub.ps1` (644 рядки). Windows (PS 5.1+), Linux/macOS (pwsh 7+).
+- **Single-file PowerShell TUI:** `irmhub.ps1` (656 рядків). Windows (PS 5.1+), Linux/macOS (pwsh 7+).
 - **No build system, tests, or CI:** лише ручна верифікація.
 - **Zero external dependencies:** чистий PowerShell.
 - **GitHub Pages:** `index.html` — лендінг.
@@ -25,12 +25,14 @@ pwsh -File irmhub.ps1 -Run 6 -AutoConfirm
 - **Variable Collision:** PowerShell case-insensitive. `$script:VERSION` перезапише `-Version` switch `$Version`. Використовуйте `$script:SCRIPT_VERSION`.
 - **Exit Behavior:** Інтерактивний режим — **ніколи** `exit` (тільки `return`), інакше вб'є батьківське вікно при `iex`. Неінтерактивний — `exit` з кодом.
 - **Exit Codes:** 0=Success, 1=Cancel, 2=AdminRequired, 3=NotFound, 4=ExecFailed, 5=Network, 6=BadArgs, 7=UpdateAvailable.
-- **StrictMode + `[char] * [int]`:** `Set-StrictMode -Version 2.0` ламає множення char на int під `iex`. Завжди `[string]` для повторення. `Start-InteractiveMode` робить `Set-StrictMode -Off`.
+- **StrictMode + `[char] * [int]`:** `Set-StrictMode -Version 2.0` ламає множення char на int під `iex`. Завжди `[string]` для повторення (напр. у `Write-Divider`). `[char] * [int]` скрізь виправлено, тому `Set-StrictMode -Off` більше не потрібен.
 - **Hashtable Access:** `$script:ANSI['Red']`, не `$script:ANSI.Red` (ключі `Bold`, `Dim` ламають dot-notation).
 - **Cross-Platform Safety:** `[Security.Principal.WindowsIdentity]::GetCurrent()` падає на Linux/macOS. Обгортайте в `try/catch`.
 - **Confirmation:** `-ceq 'YES'` (case-sensitive). Тільки `YES` великими.
 - **$ErrorActionPreference:** Встановлено `'Stop'` на рівні скрипта. Функції, що можуть фейлитись — у try/catch.
 - **Relaxed Scope для команд:** `$relaxedCmd` обгортає виконання в `Set-StrictMode -Off; $ErrorActionPreference = 'Continue'`.
+- **Approved Verb:** `Invoke-ToolCommand` (не `Execute-`). PS Approved Verb.
+- **DNS замість HTTP:** `Test-NetworkConnectivity` використовує `[System.Net.Dns]::GetHostAddresses()`, не `Invoke-WebRequest`.
 
 ## Adding a Tool
 Редагувати `$script:CATALOG` у `irmhub.ps1`.
