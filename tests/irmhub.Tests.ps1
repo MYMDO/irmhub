@@ -7,7 +7,7 @@ Describe 'Search-Tools' {
     It 'finds tools by name' {
         $results = Search-Tools -Keyword 'scoop'
         $results.Count | Should -BeGreaterThan 0
-        $results[0].Name | Should -BeLike '*scoop*'
+        $results.Name | Should -Contain 'Scoop'
     }
 
     It 'finds tools by keyword in description' {
@@ -23,7 +23,7 @@ Describe 'Search-Tools' {
 
     It 'returns all tools for empty keyword' {
         $results = Search-Tools -Keyword ''
-        $results.Count | Should -Be $CATALOG.Count
+        $results.Count | Should -Be $script:CATALOG.Count
     }
 
     It 'returns empty for unmatched keyword' {
@@ -54,7 +54,7 @@ Describe 'Get-ToolsByCategory' {
 
     It 'returns all tools for All category' {
         $results = Get-ToolsByCategory -Category 'All'
-        $results.Count | Should -Be $CATALOG.Count
+        $results.Count | Should -Be $script:CATALOG.Count
     }
 
     It 'returns empty for non-existent category' {
