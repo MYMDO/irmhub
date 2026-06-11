@@ -54,7 +54,7 @@ while ($i -lt $args.Count) {
     switch ($args[$i]) {
         '-List' { $List = $true }
         '-Search' { $Search = $args[++$i] }
-        '-Run' { $Run = [int]$args[++$i] }
+        '-Run' { $Run = [int]$args[++$i]; if ($Run -le 0) { Write-Warning "Invalid -Run value: must be positive."; exit 6 } }
         '-Category' { $Category = $args[++$i] }
         '-AutoConfirm' { $AutoConfirm = $true }
         '-NoColor' { $NoColor = $true }
@@ -313,7 +313,7 @@ function Show-ToolList {
         [array]$Tools
     )
     
-    $count = @($Tools).Length
+    $count = @($Tools).Count
     if ($count -eq 0) {
         Write-Host "  $(Format-Color 'No tools found matching criteria.' 'Yellow')"
         return
@@ -517,7 +517,7 @@ function Start-InteractiveMode {
                             
                             Show-Banner
                             $displayHeader = if ($selectedCategory -eq 'All') { 'ENTIRE CATALOG' } else { $selectedCategory.ToUpper() }
-                            Write-Host " $(Format-Color $displayHeader 'Cyan' -Bold)  $(Format-Color "($(@($filteredTools).Length) tools)" 'BrightBlack')"
+                            Write-Host " $(Format-Color $displayHeader 'Cyan' -Bold)  $(Format-Color "($(@($filteredTools).Count) tools)" 'BrightBlack')"
                             Write-Host ''
                             
                             Show-ToolList -Tools $filteredTools
@@ -587,7 +587,7 @@ function Start-NonInteractiveMode {
 
     if ($List) {
         Show-Banner -NoClear
-        Write-Host " $(Format-Color 'AVAILABLE TOOLS' 'Cyan' -Bold)  $(Format-Color "($($script:CATALOG.Length) total)" 'BrightBlack')"
+        Write-Host " $(Format-Color 'AVAILABLE TOOLS' 'Cyan' -Bold)  $(Format-Color "($($script:CATALOG.Count) total)" 'BrightBlack')"
         Write-Host ''
         Show-ToolList -Tools $script:CATALOG
         return $script:EXIT_CODES.Success
@@ -596,7 +596,7 @@ function Start-NonInteractiveMode {
     if (-not [string]::IsNullOrWhiteSpace($Search)) {
         $results = Search-Tools -Keyword $Search
         Show-Banner -NoClear
-        Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $Search 'Cyan' -Bold)  $(Format-Color "($(@($results).Length) found)" 'BrightBlack')"
+        Write-Host " $(Format-Color 'Search Results For:' 'BrightBlack') $(Format-Color $Search 'Cyan' -Bold)  $(Format-Color "($(@($results).Count) found)" 'BrightBlack')"
         Write-Host ''
         Show-ToolList -Tools $results
         return $script:EXIT_CODES.Success
@@ -609,22 +609,17 @@ function Start-NonInteractiveMode {
             return $script:EXIT_CODES.ToolNotFound
         }
         Write-Host "Executing: $($tool.Name)..." -ForegroundColor Cyan
-        return Invoke-ToolExecution -Tool $tool -SkipConfirmation:$AutoConfirm -AutoConfirm:$AutoConfirm -NonInteractive
+        return Invoke-ToolExecution -Tool $tool -AutoConfirm:$AutoConfirm -NonInteractive
     }
-    if ($Run -eq 0) {
-        Write-Host "Invalid ID: must be a positive number." -ForegroundColor Red
-        return $script:EXIT_CODES.InvalidParameter
-    }
-
     if (-not [string]::IsNullOrWhiteSpace($Category)) {
         $tools = Get-ToolsByCategory -Category $Category
-        if (@($tools).Length -eq 0) {
+        if (@($tools).Count -eq 0) {
             Write-Host "No tools found in category: $Category" -ForegroundColor Yellow
             Write-Host "Available categories: $((@('All') + ($script:CATALOG | Select-Object -ExpandProperty Cat -Unique | Sort-Object) | Where-Object { $_ -ne 'All' }) -join ', ')" -ForegroundColor Gray
             return $script:EXIT_CODES.Success
         }
         Show-Banner -NoClear
-        Write-Host " $(Format-Color $Category.ToUpper() 'Cyan' -Bold)  $(Format-Color "($(@($tools).Length) tools)" 'BrightBlack')"
+        Write-Host " $(Format-Color $Category.ToUpper() 'Cyan' -Bold)  $(Format-Color "($(@($tools).Count) tools)" 'BrightBlack')"
         Write-Host ''
         Show-ToolList -Tools $tools
         return $script:EXIT_CODES.Success
