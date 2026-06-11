@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+<!-- Nothing here yet -->
+
+---
+
+## [1.1.0] - 2026-06-11
+
 ### Security
 
 - **Function renamed** — `Execute-ToolCommand` → `Invoke-ToolCommand` (PS Approved Verb)
@@ -39,7 +45,12 @@
 - **MAS disclaimer** — додано "Use at your own risk and in compliance with local laws"
 - Повідомлення запуску: "child runspace" → "Preparing execution scope"
 - Документацію повністю оновлено (AGENTS.md, README, CONTRIBUTING, CHANGELOG, SECURITY, index.html)
-- Рядки: 644 → 651 → 652
+- Рядки: 644 → 651 → 652 → 654
+
+### Added
+
+- **Ollama** (ID 20) — нова категорія `AI / LLM`, 173k+ GitHub зірок
+- **Категорія AI / LLM** — додано кольорове мапування `$script:CATEGORY_COLORS`
 
 ### DevOps
 
@@ -76,5 +87,6 @@
 
 | Version | Date | Status |
 |:--------|:-----|:-------|
-| 1.0.0 | 2026-04-06 | Current |
+| 1.0.0 | 2026-04-06 | Previous |
+| 1.1.0 | 2026-06-11 | Current |
 | 0.1.0 | 2026-03-30 | Initial |

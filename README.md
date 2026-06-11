@@ -30,7 +30,7 @@ pwsh -c "irm https://raw.githubusercontent.com/MYMDO/irmhub/main/irmhub.ps1 | ie
 
 ## Features
 
-- **Централізований каталог** — 19 інструментів у 8 категоріях
+- **Централізований каталог** — 20 інструментів у 9 категоріях
 - **Інтерактивний TUI** — меню з ANSI-кольорами, навігація цифрами
 - **Пошук** — фільтрація за назвою, ключовим словом
 - **Категорії** — перегляд за групами (регістронезалежний пошук)
@@ -141,6 +141,12 @@ irmhub.ps1
 | ID | Tool | Admin | Description |
 |:---|:-----|:-----:|:------------|
 | 16 | Datatools (Caltech) | No | CLI tools for JSON, CSV, XLSX, DSV processing |
+
+### AI / LLM
+
+| ID | Tool | Admin | Description |
+|:---|:-----|:-----:|:------------|
+| 20 | Ollama | No | Run LLMs locally (Llama, Mistral, DeepSeek, Gemma) |
 
 ---
 

@@ -233,6 +233,7 @@ $script:CATEGORY_COLORS = @{
     'Shell / UX' = 'Cyan'
     'Media' = 'Magenta'
     'Dev Tools' = 'BrightBlack'
+    'AI / LLM' = 'Cyan'
 }
 #endregion
 
@@ -257,6 +258,7 @@ $script:CATALOG = @(
     [PSCustomObject]@{ Id=17; Name='InstallOffice Tool';     Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://setup.installoffice.org | iex';                                                                                                  GitHub='https://github.com/installoffice/setup';                   Desc='Official Microsoft Office Installation Tool. Install/Remove MS Office apps.' }
     [PSCustomObject]@{ Id=18; Name='Win11Debloat (Raphire)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://debloat.raphi.re/ | iex';                                                                                                  GitHub='https://github.com/Raphire/Win11Debloat';                  Desc='Remove bloatware, telemetry, and declutter Windows 10/11 quickly.' }
     [PSCustomObject]@{ Id=19; Name='WinGet-CLI (LTSC/LTSB)'; Cat='System';          Icon='[SYS]'; Admin=$true;  Cmd='irm https://winget.pro | iex';                                                                                                              GitHub='https://github.com/asheroto/winget-install';              Desc='Install Microsoft WinGet on Windows 10/11 LTSC, LTSB, and Server versions.' }
+    [PSCustomObject]@{ Id=20; Name='Ollama';                  Cat='AI / LLM';        Icon='[AI] '; Admin=$false; Cmd='irm https://ollama.com/install.ps1 | iex';                                                                                                       GitHub='https://github.com/ollama/ollama';                        Desc='Run large language models locally. Llama, Mistral, DeepSeek, Gemma and more.' }
 )
 
 $dupeIds = $script:CATALOG | Group-Object Id | Where-Object Count -gt 1
