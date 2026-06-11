@@ -187,7 +187,7 @@ irmhub.ps1
 
 ```
 irmhub/
-├── irmhub.ps1     # Головний застосунок (656 рядків)
+├── irmhub.ps1     # Головний застосунок (651 рядок)
 ├── index.html     # GitHub Pages лендінг
 ├── README.md      # Цей файл
 ├── AGENTS.md      # Інструкції для AI-агентів
@@ -196,7 +196,14 @@ irmhub/
 ├── SECURITY.md    # Політика безпеки
 ├── LICENSE        # MIT License
 ├── .editorconfig  # Конфігурація редактора
-└── .gitignore     # Правила ігнорування Git
+├── .gitignore     # Правила ігнорування Git
+├── .github/
+│   ├── workflows/
+│   │   └── lint.yml          # PSScriptAnalyzer CI
+│   └── ISSUE_TEMPLATE/
+│       └── new-tool.yml      # Шаблон для додавання інструментів
+└── tests/
+    └── irmhub.Tests.ps1      # Pester unit-тести
 ```
 
 ### Script Structure (`irmhub.ps1`)

@@ -1,0 +1,80 @@
+name: New Tool Request
+description: Propose a tool to add to the IRMHUB catalog
+title: "[Tool] "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Tool Name
+      description: What is the official name of the tool?
+      placeholder: e.g., fnm, uv, Spicetify
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Which category does this tool belong to?
+      options:
+        - Package Manager
+        - JavaScript
+        - Python
+        - Rust
+        - System
+        - Shell / UX
+        - Media
+        - Dev Tools
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Install URL
+      description: The HTTPS `irm | iex` install command
+      placeholder: irm https://example.com/install.ps1 | iex
+    validations:
+      required: true
+
+  - type: input
+    id: github
+    attributes:
+      label: GitHub Repository
+      placeholder: https://github.com/org/repo
+    validations:
+      required: true
+
+  - type: dropdown
+    id: admin
+    attributes:
+      label: Admin Required?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+
+  - type: textarea
+    id: desc
+    attributes:
+      label: Description
+      description: Brief description of the tool (one line)
+      placeholder: e.g., "Fast Node Version Manager written in Rust"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: criteria
+    attributes:
+      label: Criteria Checklist
+      options:
+        - label: Active development (commits within last 6 months)
+          required: true
+        - label: HTTPS-only install URL
+          required: true
+        - label: No obfuscated code
+          required: true
+        - label: Public repository with OSI-approved license
+          required: true

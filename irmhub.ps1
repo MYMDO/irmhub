@@ -647,5 +647,6 @@ function Main {
     }
 }
 
-Main
+# Don't auto-run Main when dot-sourced (e.g., for Pester tests)
+if ($MyInvocation.InvocationName -ne '.') { Main }
 #endregion

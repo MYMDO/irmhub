@@ -6,6 +6,15 @@
 - **Zero external dependencies:** чистий PowerShell.
 - **GitHub Pages:** `index.html` — лендінг.
 
+## Testing
+```powershell
+# Pester unit-тести (усі функції)
+Invoke-Pester ./tests/irmhub.Tests.ps1
+
+# Перевірка PSScriptAnalyzer (CI)
+Invoke-ScriptAnalyzer ./irmhub.ps1 -Severity Error
+```
+
 ## Verification Commands
 ```powershell
 # Синтаксис + список 19 інструментів

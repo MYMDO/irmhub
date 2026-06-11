@@ -1,0 +1,20 @@
+name: Lint
+
+on: [push, pull_request]
+
+jobs:
+  analyze:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Run PSScriptAnalyzer (Errors only)
+        shell: pwsh
+        run: |
+          $r = Invoke-ScriptAnalyzer ./irmhub.ps1 -Severity Error
+          if ($r) { $r; exit 1 }
+          Write-Host "No errors found." -ForegroundColor Green

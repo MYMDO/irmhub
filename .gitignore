@@ -38,10 +38,6 @@ temp/
 .git/
 !.git/COMMIT_EDITMSG
 
-# CI/CD
-.github/
-*.yml
-*.yaml
 
 # Documentation build
 site/

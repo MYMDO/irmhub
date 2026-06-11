@@ -39,7 +39,15 @@
 - **MAS disclaimer** — додано "Use at your own risk and in compliance with local laws"
 - Повідомлення запуску: "child runspace" → "Preparing execution scope"
 - Документацію повністю оновлено (AGENTS.md, README, CONTRIBUTING, CHANGELOG, SECURITY, index.html)
-- Рядки: 644 → 656
+- Рядки: 644 → 651
+
+### DevOps
+
+- **PSScriptAnalyzer CI** — `.github/workflows/lint.yml` (windows-latest, Errors only)
+- **Pester tests** — `tests/irmhub.Tests.ps1` (Search, Get-ToolById, Get-ToolsByCategory, Test-AdministratorRights, Get-ConsoleWidth, Format-Color)
+- **Issue template** — `.github/ISSUE_TEMPLATE/new-tool.yml` (структурована форма для додавання інструментів)
+- **`Main` guard** — додано `$MyInvocation.InvocationName` check, щоб скрипт не запускався при dot-source (Pester)
+- **`.gitignore`** — прибрано `.github/`, `*.yml`, `*.yaml` з ігнорування
 
 ---
 
